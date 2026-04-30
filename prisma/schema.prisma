@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  roll         String?
+  fatherName   String?
+  mobileNumber String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Class {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  name         String             @unique
+  assignments  TeacherAssignment[]
+  posts        Post[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model Section {
+  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  assignments  TeacherAssignment[]
+  posts        Post[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model Subject {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String    @unique
+  teachers    Teacher[]
+  posts       Post[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Teacher {
+  id            String             @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  subjectId     String
+  password      String
+  profilePhoto  String?
+  subject       Subject            @relation(fields: [subjectId], references: [id])
+  assignments   TeacherAssignment[]
+  posts         Post[]
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model TeacherAssignment {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  teacherId   String
+  classId     String
+  sectionId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  class       Class    @relation(fields: [classId], references: [id])
+  section     Section  @relation(fields: [sectionId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  type        String
+  date        DateTime
+  teacherId   String
+  classId     String
+  sectionId   String
+  subjectId   String
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
+  class       Class    @relation(fields: [classId], references: [id])
+  section     Section  @relation(fields: [sectionId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
+  isHighlight Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Notice {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  type        String   // General, Holiday, Exam, Important, Internship
+  date        DateTime
+  isImportant Boolean  @default(false)
+  isPinned    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
