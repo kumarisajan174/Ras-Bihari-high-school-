@@ -1,6 +1,7 @@
 'use client'
 import { motion } from 'framer-motion'
-import { useRouter, useEffect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { Users, BookOpen, FileText, Settings, GraduationCap, Layers, Megaphone, LogOut } from 'lucide-react'
 
 export default function AdminDashboard() {
