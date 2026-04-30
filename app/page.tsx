@@ -6,7 +6,7 @@ import HighlightCard from '@/components/HighlightCard'
 import NoticeBoard from '@/components/NoticeBoard'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, LogIn } from 'lucide-react'
+import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, LogIn, Settings } from 'lucide-react'
 
 
 
@@ -177,7 +177,7 @@ export default function HomePage() {
           </Link>
           
           {/* Quick Links Grid */}
-          <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="mt-4 grid grid-cols-3 gap-3">
             <Link href="/teachers">
               <motion.div
                 whileHover={{ scale: 1.05, y: -3 }}
@@ -203,6 +203,20 @@ export default function HomePage() {
                 </div>
                 <h3 className="font-bold text-gray-800 text-sm">Teacher Login</h3>
                 <p className="text-xs text-gray-500">For teachers</p>
+              </motion.div>
+            </Link>
+            
+            <Link href="/admin/login">
+              <motion.div
+                whileHover={{ scale: 1.05, y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                className="glass rounded-2xl p-4 shadow-xl border border-white/30"
+              >
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center text-white mb-2">
+                  <Settings size={20} />
+                </div>
+                <h3 className="font-bold text-gray-800 text-sm">Admin Login</h3>
+                <p className="text-xs text-gray-500">For admin</p>
               </motion.div>
             </Link>
           </div>

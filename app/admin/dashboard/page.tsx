@@ -1,10 +1,22 @@
 'use client'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
-import { Users, BookOpen, FileText, Settings, GraduationCap, Layers, Megaphone } from 'lucide-react'
+import { useRouter, useEffect } from 'next/navigation'
+import { Users, BookOpen, FileText, Settings, GraduationCap, Layers, Megaphone, LogOut } from 'lucide-react'
 
 export default function AdminDashboard() {
   const router = useRouter()
+
+  useEffect(() => {
+    const admin = localStorage.getItem('admin')
+    if (!admin) {
+      router.push('/admin/login')
+    }
+  }, [router])
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin')
+    router.push('/admin/login')
+  }
 
   const menuItems = [
     {
@@ -77,12 +89,21 @@ export default function AdminDashboard() {
       <nav className="glass sticky top-0 z-50 px-4 py-4 shadow-lg border-b border-white/30">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <h1 className="font-bold text-gray-800 text-xl">Admin Panel</h1>
-          <button
-            onClick={() => router.push('/')}
-            className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-medium text-sm"
-          >
-            View Site
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.push('/')}
+              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-medium text-sm"
+            >
+              View Site
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl"
+              title="Logout"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
         </div>
       </nav>
 

@@ -8,6 +8,7 @@ async function main() {
   await prisma.subject.deleteMany()
   await prisma.section.deleteMany()
   await prisma.class.deleteMany()
+  await prisma.admin.deleteMany()
 
   const class9 = await prisma.class.create({ data: { name: '9' } })
   const class10 = await prisma.class.create({ data: { name: '10' } })
@@ -191,6 +192,18 @@ async function main() {
   console.log(`- Shivani (Mathematics): shivani123`)
   console.log(`- Akash (Physics): akash123`)
   console.log('Sample posts and notices created!')
+
+  // Create Admin
+  console.log('Creating admin...')
+  const admin = await prisma.admin.create({
+    data: {
+      username: 'admin',
+      password: 'admin123',
+    },
+  })
+  console.log(`Admin created!`)
+  console.log(`- Username: admin`)
+  console.log(`- Password: admin123`)
 }
 
 main()
