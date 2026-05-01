@@ -6,19 +6,34 @@ export const dynamic = 'force-dynamic'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const classId = searchParams.get('classId')
-    const sectionId = searchParams.get('sectionId')
-    const subjectId = searchParams.get('subjectId')
+    const className = searchParams.get('class')
+    const sectionName = searchParams.get('section')
+    const subjectName = searchParams.get('subject')
 
     // If no filters provided, return empty array
-    if (!classId && !sectionId && !subjectId) {
+    if (!className && !sectionName && !subjectName) {
       return NextResponse.json([])
     }
 
-    // Build the assignments filter for class AND section
-    const assignmentsFilter: any = {}
-    if (classId) assignmentsFilter.classId = classId
-    if (sectionId) assignmentsFilter.sectionId = sectionId
+    // Resolve names to IDs
+    let classId: string | undefined
+    let sectionId: string | undefined
+    let subjectId: string | undefined
+
+    if (className) {
+      const cls = await prisma.class.findUnique({ where: { name: className } })
+      classId = cls?.id
+    }
+
+    if (sectionName) {
+      const section = await prisma.section.findUnique({ where: { name: sectionName } })
+      sectionId = section?.id
+    }
+
+    if (subjectName) {
+      const subject = await prisma.subject.findUnique({ where: { name: subjectName } })
+      subjectId = subject?.id
+    }
 
     // Build where clause
     const whereClause: any = {}
@@ -29,9 +44,13 @@ export async function GET(request: Request) {
     }
 
     // Filter by assignments (class AND section match)
-    if (Object.keys(assignmentsFilter).length > 0) {
+    if (classId || sectionId) {
+      const assignmentFilter: any = {}
+      if (classId) assignmentFilter.classId = classId
+      if (sectionId) assignmentFilter.sectionId = sectionId
+
       whereClause.assignments = {
-        some: assignmentsFilter
+        some: assignmentFilter
       }
     }
 

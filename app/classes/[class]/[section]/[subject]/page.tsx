@@ -27,12 +27,12 @@ export default function SubjectPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const classId = params.class as string;
-        const sectionId = params.section as string;
-        const subjectId = params.subject as string;
+        const className = params.class as string;
+        const sectionName = params.section as string;
+        const subjectName = params.subject as string;
 
         const [teachersRes, classesRes, sectionsRes, subjectsRes] = await Promise.all([
-          fetch(`/api/teachers?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`),
+          fetch(`/api/teachers?class=${className}&section=${sectionName}&subject=${subjectName}`),
           fetch('/api/classes'),
           fetch('/api/sections'),
           fetch('/api/subjects')
@@ -43,9 +43,9 @@ export default function SubjectPage() {
         const subjectsData = await subjectsRes.json();
 
         setTeachers(Array.isArray(teachersData) ? teachersData : []);
-        setSelectedClass(classesData.find((c: any) => c.id === params.class));
-        setSelectedSection(sectionsData.find((s: any) => s.id === params.section));
-        setSelectedSubject(subjectsData.find((s: any) => s.id === params.subject));
+        setSelectedClass(classesData.find((c: any) => c.name === params.class));
+        setSelectedSection(sectionsData.find((s: any) => s.name === params.section));
+        setSelectedSubject(subjectsData.find((s: any) => s.name === params.subject));
       } catch (error) {
         console.error(error);
         setTeachers([]);
