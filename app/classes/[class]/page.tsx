@@ -19,21 +19,14 @@ export default function ClassPage() {
   const router = useRouter();
   const params = useParams();
   const [sections, setSections] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [sectionsRes, classesRes] = await Promise.all([
-          fetch('/api/sections'),
-          fetch('/api/classes')
-        ]);
+        const sectionsRes = await fetch('/api/sections');
         const sectionsData = await sectionsRes.json();
-        const classesData = await classesRes.json();
-
         setSections(sectionsData);
-        setSelectedClass(classesData.find((c: any) => c.id === params.class));
       } catch (error) {
         console.error(error);
       } finally {
@@ -69,7 +62,7 @@ export default function ClassPage() {
           animate={{ y: 0, opacity: 1 }}
           className="text-center mb-8"
         >
-          <h2 className="text-2xl font-bold text-gray-800">Class {selectedClass?.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Class {params.class}</h2>
           <p className="text-gray-500 mt-2">Choose your section</p>
         </motion.div>
 
@@ -85,7 +78,7 @@ export default function ClassPage() {
                 transition={{ delay: i * 0.08, type: 'spring', stiffness: 300 }}
                 whileHover={{ scale: 1.1, rotate: 2, y: -8 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push(`/classes/${params.class}/${section.id}`)}
+                onClick={() => router.push(`/classes/${params.class}/${section.name}`)}
                 className="relative overflow-hidden rounded-2xl cursor-pointer shadow-xl"
               >
                 <div className={`bg-gradient-to-br ${colorClass} p-6 text-white`}>

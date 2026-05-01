@@ -65,7 +65,7 @@ export default function ClassesPage() {
               transition={{ delay: i * 0.1, type: 'spring', stiffness: 400, damping: 15 }}
               whileHover={{ scale: 1.05, y: -8, rotate: 2 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => router.push(`/classes/${cls.id}`)}
+              onClick={() => router.push(`/classes/${cls.name}`)}
               className="relative overflow-hidden rounded-3xl cursor-pointer shadow-2xl"
             >
               <div className={`bg-gradient-to-br ${color} p-6 text-white`}>

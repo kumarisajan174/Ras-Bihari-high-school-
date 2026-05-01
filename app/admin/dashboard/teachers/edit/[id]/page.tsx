@@ -13,20 +13,21 @@ export default function EditTeacherPage() {
   const [success, setSuccess] = useState(false)
   const [fetching, setFetching] = useState(true)
 
+  const [classes, setClasses] = useState<any[]>([])
+  const [sections, setSections] = useState<any[]>([])
   const [subjects, setSubjects] = useState<any[]>([])
 
   const [formData, setFormData] = useState({
     name: '',
-    subjectId: '',
+    subject: '',
     password: '',
-    assignedClasses: [] as string[],
-    assignedSections: [] as string[]
+    classNames: [] as string[],
+    sectionNames: [] as string[]
   })
 
-  const classOptions = ['9', '10', '11', '12']
-  const sectionOptions = ['A', 'B', 'C', 'D']
-
   useEffect(() => {
+    fetchClasses()
+    fetchSections()
     fetchSubjects()
     fetchTeacher()
   }, [teacherId])
@@ -38,20 +39,38 @@ export default function EditTeacherPage() {
       const teacher = data.find((t: any) => t.id === teacherId)
 
       if (teacher) {
-        console.log('Teacher data:', teacher)
-
         setFormData({
           name: teacher.name,
-          subjectId: teacher.subjectId,
+          subject: teacher.subject,
           password: teacher.password,
-          assignedClasses: teacher.assignedClasses || [],
-          assignedSections: teacher.assignedSections || []
+          classNames: teacher.assignedClasses || [],
+          sectionNames: teacher.assignedSections || []
         })
       }
     } catch (error) {
       console.error(error)
     } finally {
       setFetching(false)
+    }
+  }
+
+  async function fetchClasses() {
+    try {
+      const res = await fetch('/api/admin/classes')
+      const data = await res.json()
+      setClasses(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  async function fetchSections() {
+    try {
+      const res = await fetch('/api/admin/sections')
+      const data = await res.json()
+      setSections(data)
+    } catch (error) {
+      console.error(error)
     }
   }
 
@@ -68,34 +87,34 @@ export default function EditTeacherPage() {
   function toggleClass(className: string) {
     setFormData(prev => ({
       ...prev,
-      assignedClasses: prev.assignedClasses.includes(className)
-        ? prev.assignedClasses.filter(c => c !== className)
-        : [...prev.assignedClasses, className]
+      classNames: prev.classNames.includes(className)
+        ? prev.classNames.filter(n => n !== className)
+        : [...prev.classNames, className]
     }))
   }
 
   function toggleSection(sectionName: string) {
     setFormData(prev => ({
       ...prev,
-      assignedSections: prev.assignedSections.includes(sectionName)
-        ? prev.assignedSections.filter(s => s !== sectionName)
-        : [...prev.assignedSections, sectionName]
+      sectionNames: prev.sectionNames.includes(sectionName)
+        ? prev.sectionNames.filter(n => n !== sectionName)
+        : [...prev.sectionNames, sectionName]
     }))
   }
 
   function selectAllClasses() {
-    if (formData.assignedClasses.length === classOptions.length) {
-      setFormData(prev => ({ ...prev, assignedClasses: [] }))
+    if (formData.classNames.length === classes.length) {
+      setFormData(prev => ({ ...prev, classNames: [] }))
     } else {
-      setFormData(prev => ({ ...prev, assignedClasses: [...classOptions] }))
+      setFormData(prev => ({ ...prev, classNames: classes.map(c => c.name) }))
     }
   }
 
   function selectAllSections() {
-    if (formData.assignedSections.length === sectionOptions.length) {
-      setFormData(prev => ({ ...prev, assignedSections: [] }))
+    if (formData.sectionNames.length === sections.length) {
+      setFormData(prev => ({ ...prev, sectionNames: [] }))
     } else {
-      setFormData(prev => ({ ...prev, assignedSections: [...sectionOptions] }))
+      setFormData(prev => ({ ...prev, sectionNames: sections.map(s => s.name) }))
     }
   }
 
@@ -103,17 +122,12 @@ export default function EditTeacherPage() {
     e.preventDefault()
     setLoading(true)
 
-    console.log('Submitting teacher update:', { id: teacherId, ...formData })
-
     try {
       const res = await fetch('/api/admin/teachers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: teacherId, ...formData })
       })
-
-      const data = await res.json()
-      console.log('Response:', data)
 
       if (res.ok) {
         setSuccess(true)
@@ -177,14 +191,14 @@ export default function EditTeacherPage() {
 
             <h3 className="font-bold text-gray-800 text-lg">Subject</h3>
             <select
-              value={formData.subjectId}
-              onChange={(e) => setFormData({...formData, subjectId: e.target.value})}
+              value={formData.subject}
+              onChange={(e) => setFormData({...formData, subject: e.target.value})}
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 text-gray-700"
               required
             >
               <option value="">Select Subject</option>
               {subjects.map(sub => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
+                <option key={sub.id} value={sub.name}>{sub.name}</option>
               ))}
             </select>
 
@@ -196,19 +210,19 @@ export default function EditTeacherPage() {
                   onClick={selectAllClasses}
                   className="text-sm text-indigo-600 font-medium"
                 >
-                  {formData.assignedClasses.length === classOptions.length ? 'Deselect All' : 'Select All'}
+                  {formData.classNames.length === classes.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {classOptions.map(cls => (
-                  <label key={cls} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
+                {classes.map(cls => (
+                  <label key={cls.id} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
                     <input
                       type="checkbox"
-                      checked={formData.assignedClasses.includes(cls)}
-                      onChange={() => toggleClass(cls)}
+                      checked={formData.classNames.includes(cls.name)}
+                      onChange={() => toggleClass(cls.name)}
                       className="w-5 h-5 rounded"
                     />
-                    <span className="text-gray-700">Class {cls}</span>
+                    <span className="text-gray-700">Class {cls.name}</span>
                   </label>
                 ))}
               </div>
@@ -222,19 +236,19 @@ export default function EditTeacherPage() {
                   onClick={selectAllSections}
                   className="text-sm text-indigo-600 font-medium"
                 >
-                  {formData.assignedSections.length === sectionOptions.length ? 'Deselect All' : 'Select All'}
+                  {formData.sectionNames.length === sections.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {sectionOptions.map(sec => (
-                  <label key={sec} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
+                {sections.map(sec => (
+                  <label key={sec.id} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
                     <input
                       type="checkbox"
-                      checked={formData.assignedSections.includes(sec)}
-                      onChange={() => toggleSection(sec)}
+                      checked={formData.sectionNames.includes(sec.name)}
+                      onChange={() => toggleSection(sec.name)}
                       className="w-5 h-5 rounded"
                     />
-                    <span className="text-gray-700">Section {sec}</span>
+                    <span className="text-gray-700">Section {sec.name}</span>
                   </label>
                 ))}
               </div>
@@ -243,7 +257,7 @@ export default function EditTeacherPage() {
 
           <motion.button
             type="submit"
-            disabled={loading || success || !formData.name || !formData.password || !formData.subjectId || formData.assignedClasses.length === 0 || formData.assignedSections.length === 0}
+            disabled={loading || success || !formData.name || !formData.password || !formData.subject || formData.classNames.length === 0 || formData.sectionNames.length === 0}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg ${

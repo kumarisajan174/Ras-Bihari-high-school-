@@ -88,12 +88,13 @@ export default function TeacherEditPostPage() {
     }
   }
 
-  // Get only assigned classes/sections for this teacher
-  const assignedClassIds = teacher?.assignments?.map((a: any) => a.classId) || []
-  const assignedSectionIds = teacher?.assignments?.map((a: any) => a.sectionId) || []
-  
-  const availableClasses = classes.filter((c: any) => assignedClassIds.includes(c.id))
-  const availableSections = sections.filter((s: any) => assignedSectionIds.includes(s.id))
+  // Get only assigned classes/sections for this teacher using new simple structure
+  const availableClasses = teacher?.assignedClasses?.length
+    ? classes.filter((c: any) => teacher.assignedClasses.includes(c.name))
+    : classes
+  const availableSections = teacher?.assignedSections?.length
+    ? sections.filter((s: any) => teacher.assignedSections.includes(s.name))
+    : sections
 
 
 

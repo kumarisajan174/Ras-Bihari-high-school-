@@ -29,12 +29,37 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { title, content, type, date, teacherId, classId, sectionId, subjectId, isHighlight } = await request.json()
+    const body = await request.json()
+    console.log('=== POST CREATE REQUEST ===')
+    console.log('Body:', body)
     
+    const { title, content, contentPages, type, date, teacherId, classId, sectionId, subjectId, isHighlight } = body
+
+    // Validate all required fields
+    console.log('Validating fields...')
+    console.log('teacherId:', teacherId)
+    console.log('classId:', classId)
+    console.log('sectionId:', sectionId)
+    console.log('subjectId:', subjectId)
+    
+    // Check if relations exist
+    const [teacherExists, classExists, sectionExists, subjectExists] = await Promise.all([
+      prisma.teacher.findUnique({ where: { id: teacherId } }),
+      prisma.class.findUnique({ where: { id: classId } }),
+      prisma.section.findUnique({ where: { id: sectionId } }),
+      prisma.subject.findUnique({ where: { id: subjectId } })
+    ])
+    
+    console.log('Teacher exists:', !!teacherExists)
+    console.log('Class exists:', !!classExists)
+    console.log('Section exists:', !!sectionExists)
+    console.log('Subject exists:', !!subjectExists)
+
     const post = await prisma.post.create({
       data: {
         title,
         content,
+        contentPages: contentPages || null,
         type,
         date: new Date(date),
         teacherId,
@@ -44,10 +69,15 @@ export async function POST(request: Request) {
         isHighlight: isHighlight || false
       }
     })
+    
+    console.log('Post created successfully:', post.id)
     return NextResponse.json(post)
-  } catch (error) {
-    console.error(error)
-    return NextResponse.json({ error: 'Error creating post' }, { status: 500 })
+  } catch (error: any) {
+    console.error('=== POST CREATE ERROR ===')
+    console.error('Error:', error)
+    console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
+    return NextResponse.json({ error: 'Error creating post', details: error.message }, { status: 500 })
   }
 }
 

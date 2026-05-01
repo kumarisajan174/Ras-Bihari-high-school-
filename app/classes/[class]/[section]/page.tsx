@@ -36,25 +36,14 @@ export default function SectionPage() {
   const router = useRouter();
   const params = useParams();
   const [subjects, setSubjects] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<any>(null);
-  const [selectedSection, setSelectedSection] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [subjectsRes, classesRes, sectionsRes] = await Promise.all([
-          fetch('/api/subjects'),
-          fetch('/api/classes'),
-          fetch('/api/sections')
-        ]);
+        const subjectsRes = await fetch('/api/subjects');
         const subjectsData = await subjectsRes.json();
-        const classesData = await classesRes.json();
-        const sectionsData = await sectionsRes.json();
-
         setSubjects(subjectsData);
-        setSelectedClass(classesData.find((c: any) => c.id === params.class));
-        setSelectedSection(sectionsData.find((s: any) => s.id === params.section));
       } catch (error) {
         console.error(error);
       } finally {
@@ -91,7 +80,7 @@ export default function SectionPage() {
           className="text-center mb-8"
         >
           <h2 className="text-2xl font-bold text-gray-800">
-            Class {selectedClass?.name} - Section {selectedSection?.name}
+            Class {params.class} - Section {params.section}
           </h2>
           <p className="text-gray-500 mt-2">Choose your subject</p>
         </motion.div>
@@ -113,7 +102,7 @@ export default function SectionPage() {
                 transition={{ delay: i * 0.06, type: 'spring', stiffness: 200 }}
                 whileHover={{ scale: 1.03, x: 8 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => router.push(`/classes/${params.class}/${params.section}/${subject.id}`)}
+                onClick={() => router.push(`/classes/${params.class}/${params.section}/${encodeURIComponent(subject.name)}`)}
                 className="relative overflow-hidden rounded-2xl cursor-pointer shadow-xl"
               >
                 <div className={`bg-gradient-to-r ${data.color} p-6 text-white`}>

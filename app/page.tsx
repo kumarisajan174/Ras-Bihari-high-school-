@@ -5,6 +5,7 @@ import BottomNav from '@/components/BottomNav'
 import HighlightCard from '@/components/HighlightCard'
 import NoticeBoard from '@/components/NoticeBoard'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, LogIn, Settings } from 'lucide-react'
 
@@ -13,6 +14,7 @@ import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, Log
 const floatingEmojis = ['📚', '✨', '🎓', '🌟', '🚀', '💡', '🎯', '🎨']
 
 export default function HomePage() {
+  const router = useRouter()
   const [highlights, setHighlights] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -32,6 +34,11 @@ export default function HomePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleHighlightClick(post: any) {
+    // Navigate to the post detail page
+    router.push(`/classes/${post.classId}/${post.sectionId}/${post.subjectId}/${post.teacherId}/${post.date.split('T')[0]}/${post.id}`)
   }
 
   return (
@@ -264,6 +271,7 @@ export default function HomePage() {
                     type={item.type}
                     teacher={item.teacher?.name}
                     subject={item.subject?.name}
+                    onClick={() => handleHighlightClick(item)}
                   />
                 </motion.div>
               ))}

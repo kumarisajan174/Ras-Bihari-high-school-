@@ -4,7 +4,6 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   ArrowLeft,
   User,
-  Sparkles,
   Heart,
   Star,
   Award,
@@ -18,53 +17,72 @@ export default function SubjectPage() {
   const router = useRouter();
   const params = useParams();
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>('');
-  const [selectedSection, setSelectedSection] = useState<string>('');
-  const [selectedSubject, setSelectedSubject] = useState<string>('');
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [selectedSection, setSelectedSection] = useState<any>(null);
+  const [selectedSubject, setSelectedSubject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchTeachers() {
+    async function fetchData() {
       const classParam = params.class as string;
       const sectionParam = params.section as string;
       const subjectParam = params.subject as string;
 
       console.log('=== FRONTEND PARAMS ===');
-      console.log({ class: classParam, section: sectionParam, subject: subjectParam });
+      console.log('Raw params:', { class: classParam, section: sectionParam, subject: subjectParam });
 
       if (!classParam || !sectionParam || !subjectParam) {
-        console.log('Missing params, skipping');
+        console.log('Missing params, skipping API call');
         setLoading(false);
         return;
       }
 
-      setSelectedClass(classParam);
-      setSelectedSection(sectionParam);
-      setSelectedSubject(subjectParam);
-
       try {
-        const teachersRes = await fetch('/api/teachers/filter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            class: classParam,
-            section: sectionParam,
-            subject: subjectParam
-          })
-        });
+        // First get all classes, sections, subjects to resolve IDs
+        const [classesRes, sectionsRes, subjectsRes] = await Promise.all([
+          fetch('/api/classes'),
+          fetch('/api/sections'),
+          fetch('/api/subjects')
+        ]);
 
+        const classesData = await classesRes.json();
+        const sectionsData = await sectionsRes.json();
+        const subjectsData = await subjectsRes.json();
+
+        // Resolve IDs to names (now we use names directly, not IDs)
+        const classRecord = classesData.find((c: any) => c.id === classParam || c.name === classParam);
+        const sectionRecord = sectionsData.find((s: any) => s.id === sectionParam || s.name === sectionParam);
+        const subjectRecord = subjectsData.find((s: any) => s.id === subjectParam || s.name === subjectParam);
+
+        console.log('Resolved records:', { class: classRecord, section: sectionRecord, subject: subjectRecord });
+
+        if (!classRecord || !sectionRecord || !subjectRecord) {
+          console.log('Could not resolve all records');
+          setTeachers([]);
+          setLoading(false);
+          return;
+        }
+
+        setSelectedClass(classRecord);
+        setSelectedSection(sectionRecord);
+        setSelectedSubject(subjectRecord);
+
+        // Send SIMPLE STRING VALUES to new simple-teachers/filter API
+        const teachersRes = await fetch(
+          `/api/simple-teachers/filter?class=${encodeURIComponent(classRecord.name)}&section=${encodeURIComponent(sectionRecord.name)}&subject=${encodeURIComponent(subjectRecord.name)}`
+        );
         const teachersData = await teachersRes.json();
-        console.log('Teachers from filter API:', teachersData);
+        console.log('Teachers from API:', teachersData);
         setTeachers(Array.isArray(teachersData) ? teachersData : []);
       } catch (error) {
-        console.error('Error fetching teachers:', error);
+        console.error('Error fetching data:', error);
         setTeachers([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchTeachers();
+    fetchData();
   }, [params]);
 
   if (loading) {
@@ -94,9 +112,11 @@ export default function SubjectPage() {
           className="text-center mb-8"
         >
           <h2 className="text-2xl font-bold text-gray-800">
-            Class {selectedClass} - Section {selectedSection}
+            {selectedClass ? `Class ${selectedClass.name}` : ''}
+            {selectedClass && selectedSection ? ' - ' : ''}
+            {selectedSection ? `Section ${selectedSection.name}` : ''}
           </h2>
-          <p className="text-indigo-600 font-semibold mt-1">{selectedSubject}</p>
+          <p className="text-indigo-600 font-semibold mt-1">{selectedSubject?.name}</p>
           <p className="text-gray-500 mt-2">Choose your teacher</p>
         </motion.div>
 
@@ -122,7 +142,7 @@ export default function SubjectPage() {
                   transition={{ delay: i * 0.1, type: 'spring', stiffness: 400, damping: 15 }}
                   whileHover={{ scale: 1.05, y: -6 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => router.push(`/classes/${params.class}/${params.section}/${params.subject}/${teacher.id}`)}
+                  onClick={() => router.push(`/classes/${params.class}/${params.section}/${params.subject}/${encodeURIComponent(teacher.name)}`)}
                   className="relative overflow-hidden rounded-3xl cursor-pointer shadow-2xl"
                 >
                   <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 border-2 border-indigo-100">

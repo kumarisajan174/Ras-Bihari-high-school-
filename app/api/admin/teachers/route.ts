@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const teachers = await prisma.teacher.findMany({
-      include: { subject: true },
       orderBy: { name: 'asc' }
     })
     return NextResponse.json(teachers)
@@ -18,25 +17,18 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name, subjectId, password, assignedClasses, assignedSections } = await request.json()
-
-    console.log('Creating teacher:', { name, subjectId, assignedClasses, assignedSections })
-
-    // Normalize: uppercase sections, trim classes
-    const normalizedClasses = (assignedClasses || []).map((c: string) => c.trim())
-    const normalizedSections = (assignedSections || []).map((s: string) => s.trim().toUpperCase())
-
+    const { name, subject, password, classNames, sectionNames } = await request.json()
+    
     const teacher = await prisma.teacher.create({
       data: {
         name,
-        subjectId,
+        subject,
         password,
-        assignedClasses: normalizedClasses,
-        assignedSections: normalizedSections
+        assignedClasses: classNames || [],
+        assignedSections: sectionNames || []
       }
     })
 
-    console.log('Teacher created:', teacher)
     return NextResponse.json(teacher)
   } catch (error) {
     console.error(error)
@@ -46,21 +38,16 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { id, name, subjectId, password, assignedClasses, assignedSections } = await request.json()
-
-    console.log('Updating teacher:', { id, name, subjectId, assignedClasses, assignedSections })
-
-    const normalizedClasses = (assignedClasses || []).map((c: string) => c.trim())
-    const normalizedSections = (assignedSections || []).map((s: string) => s.trim().toUpperCase())
-
+    const { id, name, subject, password, classNames, sectionNames } = await request.json()
+    
     await prisma.teacher.update({
       where: { id },
       data: {
         name,
-        subjectId,
+        subject,
         password,
-        assignedClasses: normalizedClasses,
-        assignedSections: normalizedSections
+        assignedClasses: classNames || [],
+        assignedSections: sectionNames || []
       }
     })
 

@@ -18,25 +18,24 @@ model Student {
 }
 
 model Class {
-  id           String             @id @default(auto()) @map("_id") @db.ObjectId
-  name         String             @unique
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  name         String   @unique
   posts        Post[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Section {
-  id           String             @id @default(auto()) @map("_id") @db.ObjectId
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   posts        Post[]
-  createdAt    DateTime           @default(now())
-  updatedAt    DateTime           @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Subject {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String    @unique
-  teachers    Teacher[]
   posts       Post[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -45,12 +44,11 @@ model Subject {
 model Teacher {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   name            String
-  subjectId       String
+  subject         String
+  assignedClasses String[]
+  assignedSections String[]
   password        String
   profilePhoto    String?
-  subject         Subject  @relation(fields: [subjectId], references: [id])
-  assignedClasses String[] // Simple array: ["9","10","11","12"]
-  assignedSections String[] // Simple array: ["A","B","C"]
   posts           Post[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -60,6 +58,7 @@ model Post {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   content     String
+  contentPages Json?
   type        String
   date        DateTime
   teacherId   String
@@ -69,7 +68,7 @@ model Post {
   teacher     Teacher  @relation(fields: [teacherId], references: [id])
   class       Class    @relation(fields: [classId], references: [id])
   section     Section  @relation(fields: [sectionId], references: [id])
-  subject     Subject @relation(fields: [subjectId], references: [id])
+  subject     Subject  @relation(fields: [subjectId], references: [id])
   isHighlight Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -79,7 +78,7 @@ model Notice {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   title       String
   content     String
-  type        String   // General, Holiday, Exam, Important, Internship
+  type        String
   date        DateTime
   isImportant Boolean  @default(false)
   isPinned    Boolean  @default(false)

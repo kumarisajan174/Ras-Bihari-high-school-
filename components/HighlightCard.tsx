@@ -1,6 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
-import { Star, User, BookOpen } from 'lucide-react'
+import { Star, User, BookOpen, ChevronRight } from 'lucide-react'
 
 export default function HighlightCard({
   title,
@@ -9,6 +9,7 @@ export default function HighlightCard({
   teacher,
   subject,
   className,
+  onClick,
 }: {
   title: string
   content: string
@@ -16,6 +17,7 @@ export default function HighlightCard({
   teacher?: string
   subject?: string
   className?: string
+  onClick?: () => void
 }) {
   const colors = {
     Homework: 'from-orange-400 to-pink-500',
@@ -28,15 +30,24 @@ export default function HighlightCard({
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
       className={`bg-gradient-to-br ${
         colors[type as keyof typeof colors] || colors.Homework
-      } rounded-2xl p-5 shadow-2xl text-white ${className}`}
+      } rounded-2xl p-5 shadow-2xl text-white ${className} ${onClick ? 'cursor-pointer' : ''}`}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <Star className="fill-yellow-300 text-yellow-300" size={18} />
-        <span className="text-xs font-semibold uppercase tracking-wider opacity-90">
-          Today's {type}
-        </span>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Star className="fill-yellow-300 text-yellow-300" size={18} />
+          <span className="text-xs font-semibold uppercase tracking-wider opacity-90">
+            Today's {type}
+          </span>
+        </div>
+        {onClick && (
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <ChevronRight size={18} />
+          </div>
+        )}
       </div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
       <p className="text-white/90 text-sm line-clamp-3 mb-3">{content}</p>

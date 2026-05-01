@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     const sectionValue = searchParams.get('section')
     const subjectValue = searchParams.get('subject')
 
-    console.log('=== TEACHER API ===')
+    console.log('=== FILTER TEACHERS API ===')
     console.log('Input:', { classValue, sectionValue, subjectValue })
 
     // Fetch ALL teachers
@@ -20,8 +20,9 @@ export async function GET(request: Request) {
 
     console.log('ALL TEACHERS:', JSON.stringify(allTeachers, null, 2))
 
-    // If NO filters, return all teachers
+    // If NO filters, return all
     if (!classValue && !sectionValue && !subjectValue) {
+      console.log('No filters provided, returning all teachers')
       return NextResponse.json(allTeachers)
     }
 
@@ -31,18 +32,22 @@ export async function GET(request: Request) {
       const classMatch = teacher.assignedClasses?.includes(classValue)
       const sectionMatch = teacher.assignedSections?.includes(sectionValue)
 
-      console.log(`Teacher: ${teacher.name}`)
-      console.log(`  subjectMatch: ${teacher.subject} === ${subjectValue} => ${subjectMatch}`)
-      console.log(`  classMatch: ${JSON.stringify(teacher.assignedClasses)} includes ${classValue} => ${classMatch}`)
-      console.log(`  sectionMatch: ${JSON.stringify(teacher.assignedSections)} includes ${sectionValue} => ${sectionMatch}`)
+      console.log(`\nTeacher: ${teacher.name}`)
+      console.log(`  subject: "${teacher.subject}" vs "${subjectValue}" => ${subjectMatch}`)
+      console.log(`  classes: ${JSON.stringify(teacher.assignedClasses)} includes "${classValue}" => ${classMatch}`)
+      console.log(`  sections: ${JSON.stringify(teacher.assignedSections)} includes "${sectionValue}" => ${sectionMatch}`)
+      console.log(`  FINAL: ${subjectMatch && classMatch && sectionMatch}`)
 
       return subjectMatch && classMatch && sectionMatch
     })
 
-    console.log('FILTERED TEACHERS:', JSON.stringify(filteredTeachers, null, 2))
+    console.log('\n=== FILTERED TEACHERS ===')
+    console.log('Filtered count:', filteredTeachers.length)
+    console.log(JSON.stringify(filteredTeachers, null, 2))
+
     return NextResponse.json(filteredTeachers)
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error filtering teachers:', error)
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
 }

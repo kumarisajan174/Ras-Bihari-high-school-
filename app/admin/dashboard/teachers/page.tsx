@@ -7,11 +7,9 @@ import { ArrowLeft, Plus, Trash2, Edit } from 'lucide-react'
 export default function ManageTeachers() {
   const router = useRouter()
   const [teachers, setTeachers] = useState<any[]>([])
-  const [subjects, setSubjects] = useState<any[]>([])
 
   useEffect(() => {
     fetchTeachers()
-    fetchSubjects()
   }, [])
 
   async function fetchTeachers() {
@@ -19,16 +17,6 @@ export default function ManageTeachers() {
       const res = await fetch('/api/admin/teachers')
       const data = await res.json()
       setTeachers(data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  async function fetchSubjects() {
-    try {
-      const res = await fetch('/api/admin/subjects')
-      const data = await res.json()
-      setSubjects(data)
     } catch (error) {
       console.error(error)
     }
@@ -47,11 +35,6 @@ export default function ManageTeachers() {
         console.error(error)
       }
     }
-  }
-
-  function getSubjectName(subjectId: string) {
-    const subject = subjects.find(s => s.id === subjectId)
-    return subject?.name || 'Unknown'
   }
 
   return (
@@ -87,17 +70,25 @@ export default function ManageTeachers() {
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-gray-800">{teacher.name}</h3>
-                    <p className="text-sm text-indigo-600">{getSubjectName(teacher.subjectId)}</p>
+                    <p className="text-sm text-indigo-600">{teacher.subject}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Password: <span className="font-mono text-gray-700">{teacher.password}</span>
                     </p>
                     <div className="mt-2 flex flex-wrap gap-1">
-                      {teacher.assignments?.map((a: any, j: number) => (
+                      {teacher.assignedClasses?.map((c: string, j: number) => (
                         <span
                           key={j}
                           className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-medium"
                         >
-                          {a.class?.name}{a.section?.name}
+                          Class {c}
+                        </span>
+                      ))}
+                      {teacher.assignedSections?.map((s: string, j: number) => (
+                        <span
+                          key={j}
+                          className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium"
+                        >
+                          Section {s}
                         </span>
                       ))}
                     </div>

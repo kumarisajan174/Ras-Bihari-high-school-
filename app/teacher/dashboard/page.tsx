@@ -94,7 +94,7 @@ export default function TeacherDashboardPage() {
               </div>
               <div>
                 <h2 className="font-bold text-gray-800 text-xl">Hello, {teacher.name}!</h2>
-                <p className="text-sm text-pink-600 font-medium">{teacher.subject?.name}</p>
+                <p className="text-sm text-pink-600 font-medium">{teacher.subject}</p>
               </div>
             </div>
           </motion.div>
@@ -131,12 +131,12 @@ export default function TeacherDashboardPage() {
               Assigned Classes
             </h3>
             <div className="flex flex-wrap gap-2">
-              {teacher.assignments?.map((a: any, i: number) => (
+              {teacher.assignedClasses?.map((cls: string, i: number) => (
                 <span
                   key={i}
                   className="px-3 py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-xl font-bold text-sm"
                 >
-                  {a.class?.name}{a.section?.name}
+                  Class {cls} {teacher.assignedSections?.[i] ? `- Section ${teacher.assignedSections[i]}` : ''}
                 </span>
               ))}
             </div>
