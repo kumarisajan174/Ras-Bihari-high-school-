@@ -7,7 +7,7 @@ import NoticeBoard from '@/components/NoticeBoard'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, LogIn, Settings } from 'lucide-react'
+import { BookOpen, Sparkles, Rocket, Star, Heart, GraduationCap, Zap, Smile, LogIn, Settings, Instagram } from 'lucide-react'
 
 
 
@@ -305,6 +305,17 @@ export default function HomePage() {
           <p className="text-sm text-indigo-600 font-semibold">
             Ras Bihari High School Nalanda
           </p>
+          <motion.a
+            href="https://instagram.com/sunnyni623"
+            target="_blank"
+            rel="noopener noreferrer"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-full font-semibold text-sm shadow-lg hover:shadow-xl transition-all"
+          >
+            <Instagram size={16} />
+            <span>Website Owner</span>
+          </motion.a>
         </motion.div>
       </main>
       <BottomNav />
