@@ -26,34 +26,52 @@ export default function SubjectPage() {
 
   useEffect(() => {
     async function fetchData() {
-      try {
-        const className = params.class as string;
-        const sectionName = params.section as string;
-        const subjectName = params.subject as string;
+      const className = params.class;
+      const sectionName = params.section;
+      const subjectName = params.subject;
 
-        const [teachersRes, classesRes, sectionsRes, subjectsRes] = await Promise.all([
-          fetch(`/api/teachers?class=${className}&section=${sectionName}&subject=${subjectName}`),
-          fetch('/api/classes'),
-          fetch('/api/sections'),
-          fetch('/api/subjects')
-        ]);
+      console.log('=== FRONTEND PARAMS ===');
+      console.log('params:', params);
+      console.log('className:', className);
+      console.log('sectionName:', sectionName);
+      console.log('subjectName:', subjectName);
+
+      if (!className || !sectionName || !subjectName) {
+        console.log('Missing params, skipping API call');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const teachersRes = await fetch(`/api/teachers?class=${className}&section=${sectionName}&subject=${subjectName}`);
         const teachersData = await teachersRes.json();
+        console.log('Teachers API response:', teachersData);
+
+        const classesRes = await fetch('/api/classes');
+        const sectionsRes = await fetch('/api/sections');
+        const subjectsRes = await fetch('/api/subjects');
+
         const classesData = await classesRes.json();
         const sectionsData = await sectionsRes.json();
         const subjectsData = await subjectsRes.json();
 
         setTeachers(Array.isArray(teachersData) ? teachersData : []);
-        setSelectedClass(classesData.find((c: any) => c.name === params.class));
-        setSelectedSection(sectionsData.find((s: any) => s.name === params.section));
-        setSelectedSubject(subjectsData.find((s: any) => s.name === params.subject));
+        setSelectedClass(classesData.find((c: any) => c.name === className));
+        setSelectedSection(sectionsData.find((s: any) => s.name === sectionName));
+        setSelectedSubject(subjectsData.find((s: any) => s.name === subjectName));
       } catch (error) {
-        console.error(error);
+        console.error('Error fetching data:', error);
         setTeachers([]);
       } finally {
         setLoading(false);
       }
     }
-    fetchData();
+
+    if (params.class && params.section && params.subject) {
+      fetchData();
+    } else {
+      setLoading(false);
+    }
   }, [params]);
 
   if (loading) {
