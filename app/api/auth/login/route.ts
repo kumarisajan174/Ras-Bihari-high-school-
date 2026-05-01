@@ -18,7 +18,6 @@ export async function POST(request: Request) {
     const teacher = await prisma.teacher.findUnique({
       where: { id: teacherId },
       include: {
-        subject: true,
         assignments: {
           include: {
             class: true,
