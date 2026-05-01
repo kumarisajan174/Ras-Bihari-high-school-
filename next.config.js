@@ -2,7 +2,10 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com'],
+    domains: ['localhost', 'vercel.com', '*.vercel.app'],
+  },
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
   },
 }
 

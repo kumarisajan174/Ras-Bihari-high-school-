@@ -8,15 +8,15 @@ export default function EditTeacherPage() {
   const router = useRouter()
   const params = useParams()
   const teacherId = params.id as string
-  
+
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [fetching, setFetching] = useState(true)
-  
+
   const [classes, setClasses] = useState<any[]>([])
   const [sections, setSections] = useState<any[]>([])
   const [subjects, setSubjects] = useState<any[]>([])
-  
+
   const [formData, setFormData] = useState({
     name: '',
     subjectId: '',
@@ -37,11 +37,11 @@ export default function EditTeacherPage() {
       const res = await fetch('/api/admin/teachers')
       const data = await res.json()
       const teacher = data.find((t: any) => t.id === teacherId)
-      
+
       if (teacher) {
-        const assignedClassIds = [...new Set(teacher.assignments?.map((a: any) => a.classId) || [])]
-        const assignedSectionIds = [...new Set(teacher.assignments?.map((a: any) => a.sectionId) || [])]
-        
+        const assignedClassIds = [...new Set(teacher.assignments?.map((a: any) => a.classId) || [])] as string[]
+        const assignedSectionIds = [...new Set(teacher.assignments?.map((a: any) => a.sectionId) || [])] as string[]
+
         setFormData({
           name: teacher.name,
           subjectId: teacher.subjectId,
@@ -124,14 +124,14 @@ export default function EditTeacherPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    
+
     try {
       const res = await fetch('/api/admin/teachers', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: teacherId, ...formData })
       })
-      
+
       if (res.ok) {
         setSuccess(true)
         setTimeout(() => {
