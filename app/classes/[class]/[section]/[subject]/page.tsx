@@ -8,7 +8,6 @@ import {
   Heart,
   Star,
   Award,
-  TrendingUp,
   Smile
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -26,39 +25,64 @@ export default function SubjectPage() {
 
   useEffect(() => {
     async function fetchData() {
-      const className = params.class;
-      const sectionName = params.section;
-      const subjectName = params.subject;
+      const classParam = params.class as string;
+      const sectionParam = params.section as string;
+      const subjectParam = params.subject as string;
 
       console.log('=== FRONTEND PARAMS ===');
-      console.log('params:', params);
-      console.log('className:', className);
-      console.log('sectionName:', sectionName);
-      console.log('subjectName:', subjectName);
+      console.log('Raw params:', { class: classParam, section: sectionParam, subject: subjectParam });
 
-      if (!className || !sectionName || !subjectName) {
+      if (!classParam || !sectionParam || !subjectParam) {
         console.log('Missing params, skipping API call');
         setLoading(false);
         return;
       }
 
       try {
-        const teachersRes = await fetch(`/api/teachers?class=${className}&section=${sectionName}&subject=${subjectName}`);
-        const teachersData = await teachersRes.json();
-        console.log('Teachers API response:', teachersData);
-
-        const classesRes = await fetch('/api/classes');
-        const sectionsRes = await fetch('/api/sections');
-        const subjectsRes = await fetch('/api/subjects');
+        // First get all classes, sections, subjects to resolve IDs to names
+        const [classesRes, sectionsRes, subjectsRes] = await Promise.all([
+          fetch('/api/classes'),
+          fetch('/api/sections'),
+          fetch('/api/subjects')
+        ]);
 
         const classesData = await classesRes.json();
         const sectionsData = await sectionsRes.json();
         const subjectsData = await subjectsRes.json();
 
+        // Resolve IDs to names
+        const classRecord = classesData.find((c: any) => c.id === classParam || c.name === classParam);
+        const sectionRecord = sectionsData.find((s: any) => s.id === sectionParam || s.name === sectionParam);
+        const subjectRecord = subjectsData.find((s: any) => s.id === subjectParam || s.name === subjectParam);
+
+        console.log('Resolved records:', { class: classRecord, section: sectionRecord, subject: subjectRecord });
+
+        if (!classRecord || !sectionRecord || !subjectRecord) {
+          console.log('Could not resolve all records');
+          setTeachers([]);
+          setLoading(false);
+          return;
+        }
+
+        setSelectedClass(classRecord);
+        setSelectedSection(sectionRecord);
+        setSelectedSubject(subjectRecord);
+
+        // Use POST to filter teachers by class, section, subject (using names)
+        const teachersRes = await fetch('/api/teachers/filter', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            class: classRecord.name,
+            section: sectionRecord.name,
+            subject: subjectRecord.name
+          })
+        });
+
+        const teachersData = await teachersRes.json();
+        console.log('Teachers from filter API:', teachersData);
         setTeachers(Array.isArray(teachersData) ? teachersData : []);
-        setSelectedClass(classesData.find((c: any) => c.name === className));
-        setSelectedSection(sectionsData.find((s: any) => s.name === sectionName));
-        setSelectedSubject(subjectsData.find((s: any) => s.name === subjectName));
+
       } catch (error) {
         console.error('Error fetching data:', error);
         setTeachers([]);
@@ -67,11 +91,7 @@ export default function SubjectPage() {
       }
     }
 
-    if (params.class && params.section && params.subject) {
-      fetchData();
-    } else {
-      setLoading(false);
-    }
+    fetchData();
   }, [params]);
 
   if (loading) {

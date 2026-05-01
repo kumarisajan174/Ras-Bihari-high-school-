@@ -17,103 +17,56 @@ export async function GET(request: Request) {
     console.log('=== TEACHER API ===')
     console.log('Input:', { classValue, sectionValue, subjectValue })
 
-    let classRecord = null
-    let sectionRecord = null
-    let subjectRecord = null
-
-    if (classValue) {
-      if (isObjectId(classValue)) {
-        classRecord = await prisma.class.findUnique({ where: { id: classValue } })
-      } else {
-        classRecord = await prisma.class.findUnique({ where: { name: classValue } })
-      }
+    // If NO filters, return all teachers
+    if (!classValue && !sectionValue && !subjectValue) {
+      const teachers = await prisma.teacher.findMany({
+        include: { subject: true },
+        orderBy: { name: 'asc' }
+      })
+      return NextResponse.json(teachers)
     }
 
-    if (sectionValue) {
-      if (isObjectId(sectionValue)) {
-        sectionRecord = await prisma.section.findUnique({ where: { id: sectionValue } })
-      } else {
-        sectionRecord = await prisma.section.findFirst({ where: { name: sectionValue } })
-      }
-    }
+    // Build where clause based on what's provided
+    const whereClause: any = {}
 
     if (subjectValue) {
       if (isObjectId(subjectValue)) {
-        subjectRecord = await prisma.subject.findUnique({ where: { id: subjectValue } })
+        whereClause.subjectId = subjectValue
       } else {
-        subjectRecord = await prisma.subject.findUnique({ where: { name: subjectValue } })
+        const subject = await prisma.subject.findUnique({ where: { name: subjectValue } })
+        if (subject) whereClause.subjectId = subject.id
       }
     }
 
-    console.log('Resolved:', { class: classRecord?.name, classId: classRecord?.id, section: sectionRecord?.name, sectionId: sectionRecord?.id, subject: subjectRecord?.name, subjectId: subjectRecord?.id })
+    if (classValue && sectionValue) {
+      // Get class and section IDs
+      let classId = classValue
+      let sectionId = sectionValue
 
-    // If NO filters provided, return ALL teachers (for admin/homepage)
-    if (!classValue && !sectionValue && !subjectValue) {
-      console.log('No filters, returning all teachers')
-      const allTeachers = await prisma.teacher.findMany({
-        include: {
-          subject: true,
-          assignments: {
-            include: {
-              class: true,
-              section: true
-            }
+      if (!isObjectId(classValue)) {
+        const cls = await prisma.class.findUnique({ where: { name: classValue } })
+        classId = cls?.id || ''
+      }
+
+      if (!isObjectId(sectionValue)) {
+        const sec = await prisma.section.findFirst({ where: { name: sectionValue } })
+        sectionId = sec?.id || ''
+      }
+
+      if (classId && sectionId) {
+        whereClause.assignments = {
+          some: {
+            classId: classId,
+            sectionId: sectionId
           }
-        },
-        orderBy: { name: 'asc' }
-      })
-      return NextResponse.json(allTeachers)
+        }
+      }
     }
 
-    // If filters provided but not found, return empty
-    if (classValue && !classRecord) {
-      console.log('Class not found, returning empty')
-      return NextResponse.json([])
-    }
-    if (sectionValue && !sectionRecord) {
-      console.log('Section not found, returning empty')
-      return NextResponse.json([])
-    }
-    if (subjectValue && !subjectRecord) {
-      console.log('Subject not found, returning empty')
-      return NextResponse.json([])
-    }
-
-    // Debug: Find teachers with matching subjectId
-    console.log('Finding teachers with subjectId:', subjectRecord.id)
-    const teachersBySubject = await prisma.teacher.findMany({
-      where: { subjectId: subjectRecord.id }
-    })
-    console.log('Teachers with matching subjectId:', teachersBySubject.map(t => t.name))
-
-    // Build filter for assignments
-    const assignmentFilter: any = {}
-    if (classRecord) assignmentFilter.classId = classRecord.id
-    if (sectionRecord) assignmentFilter.sectionId = sectionRecord.id
-
-    console.log('Assignment filter:', assignmentFilter)
-
-    // Check assignments directly
-    const assignments = await prisma.assignment.findMany({
-      where: {
-        classId: classRecord?.id,
-        sectionId: sectionRecord?.id
-      },
-      include: { teacher: true }
-    })
-    console.log('Assignments with class+section:', assignments.map(a => a.teacher?.name))
-
-    // Build teacher where clause
-    const teacherWhere: any = {}
-    if (subjectRecord) teacherWhere.subjectId = subjectRecord.id
-    if (Object.keys(assignmentFilter).length > 0) {
-      teacherWhere.assignments = { some: assignmentFilter }
-    }
-
-    console.log('Final teacherWhere:', teacherWhere)
+    console.log('Where clause:', JSON.stringify(whereClause))
 
     const teachers = await prisma.teacher.findMany({
-      where: teacherWhere,
+      where: whereClause,
       include: {
         subject: true,
         assignments: {
