@@ -42,7 +42,8 @@ export default function TeacherPage() {
         const subjectsData = await subjectsRes.json();
         const teachersData = await teachersRes.json();
 
-        const uniqueDates = [...new Set(postsData.map((post: any) => post.date))];
+        const datesArray: string[] = postsData.map((post: any) => String(post.date));
+        const uniqueDates = datesArray.filter((date, index, self) => self.indexOf(date) === index);
         setDates(uniqueDates.sort().reverse());
         setSelectedClass(classesData.find((c: any) => c.id === params.class));
         setSelectedSection(sectionsData.find((s: any) => s.id === params.section));

@@ -259,7 +259,6 @@ export default function HomePage() {
                   transition={{ delay: 0.5 + i * 0.1 }}
                 >
                   <HighlightCard 
-                    id={item.id}
                     title={item.title}
                     content={item.content}
                     type={item.type}

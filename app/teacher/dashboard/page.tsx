@@ -65,7 +65,7 @@ export default function TeacherDashboardPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id })
         })
-        fetchTeacherPosts()
+        fetchTeacherPosts(teacher)
       } catch (error) {
         console.error(error)
       }
