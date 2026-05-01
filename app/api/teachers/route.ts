@@ -10,12 +10,17 @@ export async function GET(request: Request) {
     const sectionId = searchParams.get('sectionId')
     const subjectId = searchParams.get('subjectId')
 
-    // If no filters provided, return empty array (teachers must be filtered)
+    // If no filters provided, return empty array
     if (!classId && !sectionId && !subjectId) {
       return NextResponse.json([])
     }
 
-    // Build where clause based on filters
+    // Build the assignments filter for class AND section
+    const assignmentsFilter: any = {}
+    if (classId) assignmentsFilter.classId = classId
+    if (sectionId) assignmentsFilter.sectionId = sectionId
+
+    // Build where clause
     const whereClause: any = {}
 
     // Filter by subject
@@ -23,16 +28,10 @@ export async function GET(request: Request) {
       whereClause.subjectId = subjectId
     }
 
-    // Filter by class and section through TeacherAssignment
-    if (classId || sectionId) {
-      whereClause.assignments = {}
-
-      if (classId) {
-        whereClause.assignments.classId = classId
-      }
-
-      if (sectionId) {
-        whereClause.assignments.sectionId = sectionId
+    // Filter by assignments (class AND section match)
+    if (Object.keys(assignmentsFilter).length > 0) {
+      whereClause.assignments = {
+        some: assignmentsFilter
       }
     }
 
@@ -41,10 +40,6 @@ export async function GET(request: Request) {
       include: {
         subject: true,
         assignments: {
-          where: {
-            ...(classId && { classId }),
-            ...(sectionId && { sectionId })
-          },
           include: {
             class: true,
             section: true
