@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { 
-  ArrowLeft, 
-  LogOut, 
-  Plus, 
-  BookOpen, 
+import {
+  ArrowLeft,
+  LogOut,
+  Plus,
+  BookOpen,
   FileText,
   Calendar,
   Edit,
@@ -27,23 +27,14 @@ export default function TeacherDashboardPage() {
     }
     const parsedTeacher = JSON.parse(savedTeacher)
     setTeacher(parsedTeacher)
-    fetchTeacherPosts(parsedTeacher)
+    fetchTeacherPosts(parsedTeacher.id)
   }, [])
 
-  async function fetchTeacherPosts(teacherData: any) {
+  async function fetchTeacherPosts(teacherId: string) {
     try {
-      const res = await fetch('/api/teachers')
+      const res = await fetch(`/api/teacher/posts?teacherId=${teacherId}`)
       const data = await res.json()
-      const teachersArray = Array.isArray(data) ? data : []
-      const currentTeacher = teachersArray.find((t: any) => t.id === teacherData?.id)
-      
-      if (currentTeacher) {
-        const postsRes = await fetch('/api/admin/posts')
-        const allPosts = await postsRes.json()
-        const allPostsArray = Array.isArray(allPosts) ? allPosts : []
-        const teacherPosts = allPostsArray.filter((p: any) => p.teacherId === currentTeacher.id)
-        setPosts(teacherPosts)
-      }
+      setPosts(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error(error)
       setPosts([])
@@ -60,12 +51,12 @@ export default function TeacherDashboardPage() {
   async function deletePost(id: string) {
     if (confirm('Are you sure you want to delete this post?')) {
       try {
-        await fetch('/api/admin/posts', {
+        await fetch('/api/teacher/posts', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id })
+          body: JSON.stringify({ id, teacherId: teacher?.id })
         })
-        fetchTeacherPosts(teacher)
+        fetchTeacherPosts(teacher?.id)
       } catch (error) {
         console.error(error)
       }
@@ -91,7 +82,6 @@ export default function TeacherDashboardPage() {
       </nav>
 
       <main className="max-w-md mx-auto px-4 py-6 space-y-6">
-        {/* Welcome Card */}
         {teacher && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -110,7 +100,6 @@ export default function TeacherDashboardPage() {
           </motion.div>
         )}
 
-        {/* Quick Actions */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -131,7 +120,6 @@ export default function TeacherDashboardPage() {
           </div>
         </motion.div>
 
-        {/* Assigned Classes/Sections */}
         {teacher && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
@@ -155,7 +143,6 @@ export default function TeacherDashboardPage() {
           </motion.div>
         )}
 
-        {/* Recent Posts */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -184,8 +171,8 @@ export default function TeacherDashboardPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${
-                          post.type === 'Homework' 
-                            ? 'bg-blue-100 text-blue-700' 
+                          post.type === 'Homework'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-green-100 text-green-700'
                         }`}>
                           {post.type}

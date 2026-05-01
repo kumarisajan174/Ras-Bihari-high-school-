@@ -1,13 +1,13 @@
 'use client';
 import { motion } from 'framer-motion';
 import { useRouter, useParams } from 'next/navigation';
-import { 
-  ArrowLeft, 
-  User, 
-  Sparkles, 
-  Heart, 
-  Star, 
-  Award, 
+import {
+  ArrowLeft,
+  User,
+  Sparkles,
+  Heart,
+  Star,
+  Award,
   TrendingUp,
   Smile
 } from 'lucide-react';
@@ -27,8 +27,12 @@ export default function SubjectPage() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const classId = params.class as string;
+        const sectionId = params.section as string;
+        const subjectId = params.subject as string;
+
         const [teachersRes, classesRes, sectionsRes, subjectsRes] = await Promise.all([
-          fetch(`/api/teachers?subjectId=${params.subject}`),
+          fetch(`/api/teachers?classId=${classId}&sectionId=${sectionId}&subjectId=${subjectId}`),
           fetch('/api/classes'),
           fetch('/api/sections'),
           fetch('/api/subjects')
@@ -38,12 +42,13 @@ export default function SubjectPage() {
         const sectionsData = await sectionsRes.json();
         const subjectsData = await subjectsRes.json();
 
-        setTeachers(teachersData);
+        setTeachers(Array.isArray(teachersData) ? teachersData : []);
         setSelectedClass(classesData.find((c: any) => c.id === params.class));
         setSelectedSection(sectionsData.find((s: any) => s.id === params.section));
         setSelectedSubject(subjectsData.find((s: any) => s.id === params.subject));
       } catch (error) {
         console.error(error);
+        setTeachers([]);
       } finally {
         setLoading(false);
       }
@@ -86,80 +91,92 @@ export default function SubjectPage() {
           <p className="text-gray-500 mt-2">Choose your teacher</p>
         </motion.div>
 
-        <div className="space-y-4">
-          {teachers.map((teacher, i) => {
-            const emoji = teacherEmojis[i % teacherEmojis.length];
-            return (
-              <motion.div
-                key={teacher.id}
-                initial={{ scale: 0, opacity: 0, rotate: -5 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ delay: i * 0.1, type: 'spring', stiffness: 400, damping: 15 }}
-                whileHover={{ scale: 1.05, y: -6 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => router.push(`/classes/${params.class}/${params.section}/${params.subject}/${teacher.id}`)}
-                className="relative overflow-hidden rounded-3xl cursor-pointer shadow-2xl"
-              >
-                <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 border-2 border-indigo-100">
-                  <div className="absolute top-4 right-4">
-                    <span className="text-3xl animate-bounce">{emoji}</span>
+        {teachers.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-12"
+          >
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">No Teacher Assigned</h3>
+            <p className="text-gray-500">No teacher is assigned for this subject in this class and section.</p>
+          </motion.div>
+        ) : (
+          <div className="space-y-4">
+            {teachers.map((teacher, i) => {
+              const emoji = teacherEmojis[i % teacherEmojis.length];
+              return (
+                <motion.div
+                  key={teacher.id}
+                  initial={{ scale: 0, opacity: 0, rotate: -5 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ delay: i * 0.1, type: 'spring', stiffness: 400, damping: 15 }}
+                  whileHover={{ scale: 1.05, y: -6 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => router.push(`/classes/${params.class}/${params.section}/${params.subject}/${teacher.id}`)}
+                  className="relative overflow-hidden rounded-3xl cursor-pointer shadow-2xl"
+                >
+                  <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6 border-2 border-indigo-100">
+                    <div className="absolute top-4 right-4">
+                      <span className="text-3xl animate-bounce">{emoji}</span>
+                    </div>
+
+                    <div className="relative z-10 flex items-center gap-5">
+                      <div className="relative">
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center shadow-xl border-4 border-white">
+                          <User size={42} className="text-white" />
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
+                          <Star size={14} className="text-white fill-yellow-300" />
+                        </div>
+                      </div>
+
+                      <div className="flex-1">
+                        <h3 className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                          {teacher.name}
+                        </h3>
+                        <div className="mt-2 flex items-center gap-2 text-gray-600 font-medium">
+                          <Smile size={16} />
+                          <span>Your Favorite Teacher!</span>
+                        </div>
+                        <div className="mt-2 flex gap-1">
+                          {[...Array(5)].map((_, starI) => (
+                            <Star
+                              key={starI}
+                              size={14}
+                              className="text-yellow-400 fill-yellow-400"
+                            />
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center shadow-lg">
+                          <ArrowLeft size={24} className="text-white rotate-180" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-indigo-100">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 text-indigo-600">
+                          <Heart size={14} className="fill-indigo-500" />
+                          <span className="font-semibold">Loved by students</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-purple-600">
+                          <Award size={14} />
+                          <span className="font-semibold">Best Teacher</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  
-                  <div className="relative z-10 flex items-center gap-5">
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-400 via-purple-400 to-pink-400 flex items-center justify-center shadow-xl border-4 border-white">
-                        <User size={42} className="text-white" />
-                      </div>
-                      <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border-3 border-white shadow-lg">
-                        <Star size={14} className="text-white fill-yellow-300" />
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                        {teacher.name}
-                      </h3>
-                      <div className="mt-2 flex items-center gap-2 text-gray-600 font-medium">
-                        <Smile size={16} />
-                        <span>Your Favorite Teacher!</span>
-                      </div>
-                      <div className="mt-2 flex gap-1">
-                        {[...Array(5)].map((_, starI) => (
-                          <Star 
-                            key={starI} 
-                            size={14} 
-                            className="text-yellow-400 fill-yellow-400"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-2">
-                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-400 flex items-center justify-center shadow-lg">
-                        <ArrowLeft size={24} className="text-white rotate-180" />
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 pt-4 border-t border-indigo-100">
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 text-indigo-600">
-                        <Heart size={14} className="fill-indigo-500" />
-                        <span className="font-semibold">Loved by students</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-purple-600">
-                        <Award size={14} />
-                        <span className="font-semibold">Best Teacher</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none" />
-              </motion.div>
-            );
-          })}
-        </div>
+
+                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-100/30 to-purple-100/30 pointer-events-none" />
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );
