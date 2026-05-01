@@ -39,8 +39,9 @@ export default function EditTeacherPage() {
       const teacher = data.find((t: any) => t.id === teacherId)
 
       if (teacher) {
-        const assignedClassIds = [...new Set(teacher.assignments?.map((a: any) => a.classId) || [])] as string[]
-        const assignedSectionIds = [...new Set(teacher.assignments?.map((a: any) => a.sectionId) || [])] as string[]
+        const assignments = teacher.assignments || []
+        const assignedClassIds: string[] = assignments.map((a: any) => String(a.classId))
+        const assignedSectionIds: string[] = assignments.map((a: any) => String(a.sectionId))
 
         setFormData({
           name: teacher.name,
