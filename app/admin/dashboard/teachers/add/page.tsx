@@ -8,44 +8,23 @@ export default function AddTeacherPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-  
-  const [classes, setClasses] = useState<any[]>([])
-  const [sections, setSections] = useState<any[]>([])
+
   const [subjects, setSubjects] = useState<any[]>([])
-  
+
   const [formData, setFormData] = useState({
     name: '',
     subjectId: '',
     password: '',
-    classIds: [] as string[],
-    sectionIds: [] as string[]
+    assignedClasses: [] as string[],
+    assignedSections: [] as string[]
   })
 
+  const classOptions = ['9', '10', '11', '12']
+  const sectionOptions = ['A', 'B', 'C', 'D']
+
   useEffect(() => {
-    fetchClasses()
-    fetchSections()
     fetchSubjects()
   }, [])
-
-  async function fetchClasses() {
-    try {
-      const res = await fetch('/api/admin/classes')
-      const data = await res.json()
-      setClasses(data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  async function fetchSections() {
-    try {
-      const res = await fetch('/api/admin/sections')
-      const data = await res.json()
-      setSections(data)
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   async function fetchSubjects() {
     try {
@@ -57,51 +36,56 @@ export default function AddTeacherPage() {
     }
   }
 
-  function toggleClass(classId: string) {
+  function toggleClass(className: string) {
     setFormData(prev => ({
       ...prev,
-      classIds: prev.classIds.includes(classId)
-        ? prev.classIds.filter(id => id !== classId)
-        : [...prev.classIds, classId]
+      assignedClasses: prev.assignedClasses.includes(className)
+        ? prev.assignedClasses.filter(c => c !== className)
+        : [...prev.assignedClasses, className]
     }))
   }
 
-  function toggleSection(sectionId: string) {
+  function toggleSection(sectionName: string) {
     setFormData(prev => ({
       ...prev,
-      sectionIds: prev.sectionIds.includes(sectionId)
-        ? prev.sectionIds.filter(id => id !== sectionId)
-        : [...prev.sectionIds, sectionId]
+      assignedSections: prev.assignedSections.includes(sectionName)
+        ? prev.assignedSections.filter(s => s !== sectionName)
+        : [...prev.assignedSections, sectionName]
     }))
   }
 
   function selectAllClasses() {
-    if (formData.classIds.length === classes.length) {
-      setFormData(prev => ({ ...prev, classIds: [] }))
+    if (formData.assignedClasses.length === classOptions.length) {
+      setFormData(prev => ({ ...prev, assignedClasses: [] }))
     } else {
-      setFormData(prev => ({ ...prev, classIds: classes.map(c => c.id) }))
+      setFormData(prev => ({ ...prev, assignedClasses: [...classOptions] }))
     }
   }
 
   function selectAllSections() {
-    if (formData.sectionIds.length === sections.length) {
-      setFormData(prev => ({ ...prev, sectionIds: [] }))
+    if (formData.assignedSections.length === sectionOptions.length) {
+      setFormData(prev => ({ ...prev, assignedSections: [] }))
     } else {
-      setFormData(prev => ({ ...prev, sectionIds: sections.map(s => s.id) }))
+      setFormData(prev => ({ ...prev, assignedSections: [...sectionOptions] }))
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
-    
+
+    console.log('Submitting teacher:', formData)
+
     try {
       const res = await fetch('/api/admin/teachers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       })
-      
+
+      const data = await res.json()
+      console.log('Response:', data)
+
       if (res.ok) {
         setSuccess(true)
         setTimeout(() => {
@@ -175,19 +159,19 @@ export default function AddTeacherPage() {
                   onClick={selectAllClasses}
                   className="text-sm text-indigo-600 font-medium"
                 >
-                  {formData.classIds.length === classes.length ? 'Deselect All' : 'Select All'}
+                  {formData.assignedClasses.length === classOptions.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {classes.map(cls => (
-                  <label key={cls.id} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
+                {classOptions.map(cls => (
+                  <label key={cls} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
                     <input
                       type="checkbox"
-                      checked={formData.classIds.includes(cls.id)}
-                      onChange={() => toggleClass(cls.id)}
+                      checked={formData.assignedClasses.includes(cls)}
+                      onChange={() => toggleClass(cls)}
                       className="w-5 h-5 rounded"
                     />
-                    <span className="text-gray-700">Class {cls.name}</span>
+                    <span className="text-gray-700">Class {cls}</span>
                   </label>
                 ))}
               </div>
@@ -201,19 +185,19 @@ export default function AddTeacherPage() {
                   onClick={selectAllSections}
                   className="text-sm text-indigo-600 font-medium"
                 >
-                  {formData.sectionIds.length === sections.length ? 'Deselect All' : 'Select All'}
+                  {formData.assignedSections.length === sectionOptions.length ? 'Deselect All' : 'Select All'}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {sections.map(sec => (
-                  <label key={sec.id} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
+                {sectionOptions.map(sec => (
+                  <label key={sec} className="flex items-center gap-2 p-3 rounded-xl bg-white/80 border border-gray-200 cursor-pointer hover:bg-white">
                     <input
                       type="checkbox"
-                      checked={formData.sectionIds.includes(sec.id)}
-                      onChange={() => toggleSection(sec.id)}
+                      checked={formData.assignedSections.includes(sec)}
+                      onChange={() => toggleSection(sec)}
                       className="w-5 h-5 rounded"
                     />
-                    <span className="text-gray-700">Section {sec.name}</span>
+                    <span className="text-gray-700">Section {sec}</span>
                   </label>
                 ))}
               </div>
@@ -222,7 +206,7 @@ export default function AddTeacherPage() {
 
           <motion.button
             type="submit"
-            disabled={loading || success || !formData.name || !formData.password || !formData.subjectId || formData.classIds.length === 0 || formData.sectionIds.length === 0}
+            disabled={loading || success || !formData.name || !formData.password || !formData.subjectId || formData.assignedClasses.length === 0 || formData.assignedSections.length === 0}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg ${

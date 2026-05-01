@@ -6,15 +6,7 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   try {
     const teachers = await prisma.teacher.findMany({
-      include: {
-        subject: true,
-        assignments: {
-          include: {
-            class: true,
-            section: true
-          }
-        }
-      },
+      include: { subject: true },
       orderBy: { name: 'asc' }
     })
     return NextResponse.json(teachers)
@@ -26,30 +18,25 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { name, subjectId, password, classIds, sectionIds } = await request.json()
-    
+    const { name, subjectId, password, assignedClasses, assignedSections } = await request.json()
+
+    console.log('Creating teacher:', { name, subjectId, assignedClasses, assignedSections })
+
+    // Normalize: uppercase sections, trim classes
+    const normalizedClasses = (assignedClasses || []).map((c: string) => c.trim())
+    const normalizedSections = (assignedSections || []).map((s: string) => s.trim().toUpperCase())
+
     const teacher = await prisma.teacher.create({
       data: {
         name,
         subjectId,
-        password
+        password,
+        assignedClasses: normalizedClasses,
+        assignedSections: normalizedSections
       }
     })
 
-    if (classIds && sectionIds) {
-      for (const classId of classIds) {
-        for (const sectionId of sectionIds) {
-          await prisma.teacherAssignment.create({
-            data: {
-              teacherId: teacher.id,
-              classId,
-              sectionId
-            }
-          })
-        }
-      }
-    }
-
+    console.log('Teacher created:', teacher)
     return NextResponse.json(teacher)
   } catch (error) {
     console.error(error)
@@ -59,32 +46,23 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { id, name, subjectId, password, classIds, sectionIds } = await request.json()
-    
+    const { id, name, subjectId, password, assignedClasses, assignedSections } = await request.json()
+
+    console.log('Updating teacher:', { id, name, subjectId, assignedClasses, assignedSections })
+
+    const normalizedClasses = (assignedClasses || []).map((c: string) => c.trim())
+    const normalizedSections = (assignedSections || []).map((s: string) => s.trim().toUpperCase())
+
     await prisma.teacher.update({
       where: { id },
       data: {
         name,
         subjectId,
-        password
+        password,
+        assignedClasses: normalizedClasses,
+        assignedSections: normalizedSections
       }
     })
-
-    await prisma.teacherAssignment.deleteMany({ where: { teacherId: id } })
-
-    if (classIds && sectionIds) {
-      for (const classId of classIds) {
-        for (const sectionId of sectionIds) {
-          await prisma.teacherAssignment.create({
-            data: {
-              teacherId: id,
-              classId,
-              sectionId
-            }
-          })
-        }
-      }
-    }
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -96,7 +74,6 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     const { id } = await request.json()
-    await prisma.teacherAssignment.deleteMany({ where: { teacherId: id } })
     await prisma.post.deleteMany({ where: { teacherId: id } })
     await prisma.teacher.delete({ where: { id } })
     return NextResponse.json({ success: true })

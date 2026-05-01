@@ -18,80 +18,53 @@ export default function SubjectPage() {
   const router = useRouter();
   const params = useParams();
   const [teachers, setTeachers] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<any>(null);
-  const [selectedSection, setSelectedSection] = useState<any>(null);
-  const [selectedSubject, setSelectedSubject] = useState<any>(null);
+  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedSection, setSelectedSection] = useState<string>('');
+  const [selectedSubject, setSelectedSubject] = useState<string>('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchTeachers() {
       const classParam = params.class as string;
       const sectionParam = params.section as string;
       const subjectParam = params.subject as string;
 
       console.log('=== FRONTEND PARAMS ===');
-      console.log('Raw params:', { class: classParam, section: sectionParam, subject: subjectParam });
+      console.log({ class: classParam, section: sectionParam, subject: subjectParam });
 
       if (!classParam || !sectionParam || !subjectParam) {
-        console.log('Missing params, skipping API call');
+        console.log('Missing params, skipping');
         setLoading(false);
         return;
       }
 
+      setSelectedClass(classParam);
+      setSelectedSection(sectionParam);
+      setSelectedSubject(subjectParam);
+
       try {
-        // First get all classes, sections, subjects to resolve IDs to names
-        const [classesRes, sectionsRes, subjectsRes] = await Promise.all([
-          fetch('/api/classes'),
-          fetch('/api/sections'),
-          fetch('/api/subjects')
-        ]);
-
-        const classesData = await classesRes.json();
-        const sectionsData = await sectionsRes.json();
-        const subjectsData = await subjectsRes.json();
-
-        // Resolve IDs to names
-        const classRecord = classesData.find((c: any) => c.id === classParam || c.name === classParam);
-        const sectionRecord = sectionsData.find((s: any) => s.id === sectionParam || s.name === sectionParam);
-        const subjectRecord = subjectsData.find((s: any) => s.id === subjectParam || s.name === subjectParam);
-
-        console.log('Resolved records:', { class: classRecord, section: sectionRecord, subject: subjectRecord });
-
-        if (!classRecord || !sectionRecord || !subjectRecord) {
-          console.log('Could not resolve all records');
-          setTeachers([]);
-          setLoading(false);
-          return;
-        }
-
-        setSelectedClass(classRecord);
-        setSelectedSection(sectionRecord);
-        setSelectedSubject(subjectRecord);
-
-        // Use POST to filter teachers by class, section, subject (using names)
         const teachersRes = await fetch('/api/teachers/filter', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            class: classRecord.name,
-            section: sectionRecord.name,
-            subject: subjectRecord.name
+            class: classParam,
+            section: sectionParam,
+            subject: subjectParam
           })
         });
 
         const teachersData = await teachersRes.json();
         console.log('Teachers from filter API:', teachersData);
         setTeachers(Array.isArray(teachersData) ? teachersData : []);
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching teachers:', error);
         setTeachers([]);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchData();
+    fetchTeachers();
   }, [params]);
 
   if (loading) {
@@ -121,11 +94,9 @@ export default function SubjectPage() {
           className="text-center mb-8"
         >
           <h2 className="text-2xl font-bold text-gray-800">
-            {selectedClass ? `Class ${selectedClass.name}` : ''}
-            {selectedClass && selectedSection ? ' - ' : ''}
-            {selectedSection ? `Section ${selectedSection.name}` : ''}
+            Class {selectedClass} - Section {selectedSection}
           </h2>
-          <p className="text-indigo-600 font-semibold mt-1">{selectedSubject?.name}</p>
+          <p className="text-indigo-600 font-semibold mt-1">{selectedSubject}</p>
           <p className="text-gray-500 mt-2">Choose your teacher</p>
         </motion.div>
 
