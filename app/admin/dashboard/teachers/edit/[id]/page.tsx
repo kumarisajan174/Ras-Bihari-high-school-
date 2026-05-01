@@ -40,7 +40,7 @@ export default function EditTeacherPage() {
 
       if (teacher) {
         const assignments = teacher.assignments || []
-        const assignedClassIds: string[] = assignments.map((a: any) => String(a.classId))
+        const assignedClassIds: string[] = assignments.map((a: any) => String(a.classId)) as string[]
         const assignedSectionIds: string[] = assignments.map((a: any) => String(a.sectionId))
 
         setFormData({
