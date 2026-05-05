@@ -108,7 +108,14 @@ export default function TeacherEditPostPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: postId,
-          ...formData
+          title: formData.title,
+          content: formData.content,
+          type: formData.type,
+          date: new Date(formData.date),
+          classId: formData.classId,
+          sectionId: formData.sectionId,
+          subjectId: formData.subjectId,
+          isHighlight: formData.isHighlight
         })
       })
       
@@ -117,6 +124,9 @@ export default function TeacherEditPostPage() {
         setTimeout(() => {
           router.push('/teacher/dashboard')
         }, 1500)
+      } else {
+        const errorData = await res.json()
+        console.error('Update failed:', errorData)
       }
     } catch (error) {
       console.error(error)

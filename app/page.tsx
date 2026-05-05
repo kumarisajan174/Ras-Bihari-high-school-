@@ -306,7 +306,7 @@ export default function HomePage() {
             Ras Bihari High School Nalanda
           </p>
           <motion.a
-            href="https://instagram.com/sunnyni623"
+            href="https://instagram.com/sunnyni62"
             target="_blank"
             rel="noopener noreferrer"
             whileHover={{ scale: 1.05 }}
