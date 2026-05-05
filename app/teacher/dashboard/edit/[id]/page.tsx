@@ -88,15 +88,13 @@ export default function TeacherEditPostPage() {
     }
   }
 
-  // Get only assigned classes/sections for this teacher using new simple structure
   const availableClasses = teacher?.assignedClasses?.length
     ? classes.filter((c: any) => teacher.assignedClasses.includes(c.name))
     : classes
   const availableSections = teacher?.assignedSections?.length
     ? sections.filter((s: any) => teacher.assignedSections.includes(s.name))
     : sections
-
-
+  const availableSubject = subjects.find((s: any) => s.name === teacher?.subject)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -199,7 +197,7 @@ export default function TeacherEditPostPage() {
                 onClick={() => setFormData({...formData, type: 'Classwork'})}
                 className={`flex-1 py-3 px-4 rounded-xl font-bold transition-all ${
                   formData.type === 'Classwork'
-                    ? 'bg-green-500 text-white'
+                    ? 'bg-purple-500 text-white'
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
@@ -208,7 +206,7 @@ export default function TeacherEditPostPage() {
             </div>
           </motion.div>
 
-          {/* Class & Section */}
+          {/* Class & Section & Subject */}
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -244,6 +242,12 @@ export default function TeacherEditPostPage() {
               </select>
             </div>
             <div>
+              <h3 className="font-bold text-gray-800 mb-2">Subject</h3>
+              <div className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-indigo-50/80 text-gray-700 font-medium">
+                {availableSubject ? availableSubject.name : teacher?.subject || 'Not assigned'}
+              </div>
+            </div>
+            <div>
               <h3 className="font-bold text-gray-800 mb-2">Date</h3>
               <input
                 type="date"
@@ -270,7 +274,6 @@ export default function TeacherEditPostPage() {
               onChange={(e) => setFormData({...formData, content: e.target.value})}
               placeholder="Write your content here..."
               className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 min-h-[200px]"
-              required
             />
 
             {/* Highlight Toggle */}

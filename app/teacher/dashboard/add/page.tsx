@@ -23,8 +23,8 @@ export default function TeacherAddPostPage() {
     title: '',
     type: 'Homework',
     date: new Date().toISOString().split('T')[0],
-    classId: '',
-    sectionId: '',
+    classIds: [] as string[],
+    sectionIds: [] as string[],
     subjectId: '',
     isHighlight: false
   })
@@ -82,6 +82,7 @@ export default function TeacherAddPostPage() {
   const availableSections = teacher?.assignedSections?.length
     ? sections.filter((s: any) => teacher.assignedSections.includes(s.name))
     : sections
+  const availableSubject = subjects.find((s: any) => s.name === teacher?.subject)
 
   function addContentPage() {
     const newPageNum = contentPages.length + 1
@@ -99,17 +100,40 @@ export default function TeacherAddPostPage() {
     setContentPages(updated)
   }
 
+  function toggleClass(classId: string) {
+    setFormData(prev => ({
+      ...prev,
+      classIds: prev.classIds.includes(classId)
+        ? prev.classIds.filter(id => id !== classId)
+        : [...prev.classIds, classId]
+    }))
+  }
+
+  function toggleSection(sectionId: string) {
+    setFormData(prev => ({
+      ...prev,
+      sectionIds: prev.sectionIds.includes(sectionId)
+        ? prev.sectionIds.filter(id => id !== sectionId)
+        : [...prev.sectionIds, sectionId]
+    }))
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     console.log('Form submitted!')
     console.log('Teacher:', teacher)
     console.log('Teacher ID:', teacher?.id)
-    console.log('Form data:', {
-      ...formData,
-      teacherId: teacher?.id,
-      content: contentPages.map(p => p.content).join('\n\n---PAGE BREAK---\n\n'),
-      contentPages: contentPages
-    })
+    console.log('Form data:', formData)
+    
+    if (formData.classIds.length === 0) {
+      alert('Please select at least one class')
+      return
+    }
+    if (formData.sectionIds.length === 0) {
+      alert('Please select at least one section')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -119,35 +143,51 @@ export default function TeacherAddPostPage() {
         router.push('/teacher/login')
         return
       }
-      console.log('Starting fetch...')
-      const res = await fetch('/api/admin/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          teacherId: teacher.id,
-          content: contentPages.map(p => p.content).join('\n\n---PAGE BREAK---\n\n'),
-          contentPages: contentPages
-        })
-      })
-      console.log('Response status:', res.status)
-      console.log('Response ok:', res.ok)
+
+      const content = contentPages.map(p => p.content).join('\n\n---PAGE BREAK---\n\n')
       
-      if (res.ok) {
-        const responseData = await res.json()
-        console.log('Response data:', responseData)
+      const postPromises = []
+      
+      for (const classId of formData.classIds) {
+        for (const sectionId of formData.sectionIds) {
+          const postPromise = fetch('/api/admin/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: formData.title,
+              content,
+              contentPages,
+              type: formData.type,
+              date: formData.date,
+              teacherId: teacher.id,
+              classId,
+              sectionId,
+              subjectId: formData.subjectId,
+              isHighlight: formData.isHighlight
+            })
+          })
+          postPromises.push(postPromise)
+        }
+      }
+
+      console.log(`Creating ${postPromises.length} posts...`)
+      const responses = await Promise.all(postPromises)
+      
+      const allSuccess = responses.every(res => res.ok)
+      
+      if (allSuccess) {
+        console.log('All posts created successfully!')
         setSuccess(true)
         setTimeout(() => {
           router.push('/teacher/dashboard')
         }, 1500)
       } else {
-        const errorData = await res.json()
-        console.log('Error response:', errorData)
-        alert('Failed to create post:\n' + (errorData.details || errorData.error || 'Unknown error'))
+        console.error('Some posts failed to create')
+        alert('Some posts failed to create. Please try again.')
       }
     } catch (error) {
       console.error('Fetch error:', error)
-      alert('Failed to create post: ' + error)
+      alert('Failed to create posts: ' + error)
     } finally {
       setLoading(false)
     }
@@ -174,16 +214,6 @@ export default function TeacherAddPostPage() {
       </nav>
 
       <main className="max-w-md mx-auto px-4 py-6">
-        <div className="glass rounded-2xl p-4 mb-4 text-xs text-gray-600">
-          <p className="font-bold mb-2">Debug Info:</p>
-          <p>formData.title: {formData.title ? '✓' : '✗'}</p>
-          <p>formData.classId: {formData.classId ? '✓' : '✗'}</p>
-          <p>formData.sectionId: {formData.sectionId ? '✓' : '✗'}</p>
-          <p>formData.subjectId: {formData.subjectId ? '✓' : '✗'}</p>
-          <p>classes.length: {classes.length}</p>
-          <p>sections.length: {sections.length}</p>
-          <p>subjects.length: {subjects.length}</p>
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <motion.div
@@ -243,48 +273,54 @@ export default function TeacherAddPostPage() {
             transition={{ delay: 0.1 }}
             className="glass rounded-2xl p-5 shadow-lg border border-white/30 space-y-4"
           >
+            {/* Classes */}
             <div>
-              <h3 className="font-bold text-gray-800 mb-2">Class</h3>
-              <select
-                value={formData.classId}
-                onChange={(e) => setFormData({...formData, classId: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 text-gray-700"
-                required
-              >
-                <option value="">Select Class</option>
+              <h3 className="font-bold text-gray-800 mb-2">Classes ({formData.classIds.length})</h3>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {availableClasses.map(cls => (
-                  <option key={cls.id} value={cls.id}>Class {cls.name}</option>
+                  <label key={cls.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/50 hover:bg-white/70 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.classIds.includes(cls.id)}
+                      onChange={() => toggleClass(cls.id)}
+                      className="w-5 h-5 rounded"
+                    />
+                    <span className="text-gray-700">Class {cls.name}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
+
+            {/* Sections */}
             <div>
-              <h3 className="font-bold text-gray-800 mb-2">Section</h3>
-              <select
-                value={formData.sectionId}
-                onChange={(e) => setFormData({...formData, sectionId: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 text-gray-700"
-                required
-              >
-                <option value="">Select Section</option>
+              <h3 className="font-bold text-gray-800 mb-2">Sections ({formData.sectionIds.length})</h3>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
                 {availableSections.map(sec => (
-                  <option key={sec.id} value={sec.id}>Section {sec.name}</option>
+                  <label key={sec.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/50 hover:bg-white/70 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.sectionIds.includes(sec.id)}
+                      onChange={() => toggleSection(sec.id)}
+                      className="w-5 h-5 rounded"
+                    />
+                    <span className="text-gray-700">Section {sec.name}</span>
+                  </label>
                 ))}
-              </select>
+              </div>
             </div>
+
+            {/* Subject */}
             <div>
               <h3 className="font-bold text-gray-800 mb-2">Subject</h3>
-              <select
-                value={formData.subjectId}
-                onChange={(e) => setFormData({...formData, subjectId: e.target.value})}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white/80 text-gray-700"
-                required
-              >
-                <option value="">Select Subject</option>
-                {subjects.map(sub => (
-                  <option key={sub.id} value={sub.id}>{sub.name}</option>
-                ))}
-              </select>
+              <div className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-indigo-50/80 text-gray-700 font-medium">
+                {availableSubject ? availableSubject.name : teacher?.subject || 'Not assigned'}
+              </div>
+              {availableSubject && (
+                <input type="hidden" value={availableSubject.id} />
+              )}
             </div>
+
+            {/* Date */}
             <div>
               <h3 className="font-bold text-gray-800 mb-2">Date</h3>
               <input
@@ -379,7 +415,7 @@ export default function TeacherAddPostPage() {
           {/* Submit Button */}
           <motion.button
             type="submit"
-            disabled={loading || success || !formData.title || !formData.classId || !formData.sectionId || !formData.subjectId || !contentPages.some(p => p.content.trim())}
+            disabled={loading || success || !formData.title || formData.classIds.length === 0 || formData.sectionIds.length === 0 || !contentPages.some(p => p.content.trim())}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-2 shadow-lg ${
@@ -391,10 +427,10 @@ export default function TeacherAddPostPage() {
                 <Check size={20} /> Added Successfully!
               </>
             ) : loading ? (
-              'Adding...'
+              `Adding ${formData.classIds.length * formData.sectionIds.length} posts...`
             ) : (
               <>
-                <Save size={20} /> Add Content
+                <Save size={20} /> Add Content ({formData.classIds.length * formData.sectionIds.length} posts)
               </>
             )}
           </motion.button>
