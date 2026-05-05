@@ -1,6 +1,6 @@
 'use client'
 import { motion } from 'framer-motion'
-import { Star, User, BookOpen, ChevronRight } from 'lucide-react'
+import { Star, User, BookOpen, ChevronRight, Building, Users } from 'lucide-react'
 
 export default function HighlightCard({
   title,
@@ -10,6 +10,8 @@ export default function HighlightCard({
   subject,
   className,
   onClick,
+  classInfo,
+  sectionInfo,
 }: {
   title: string
   content: string
@@ -18,6 +20,8 @@ export default function HighlightCard({
   subject?: string
   className?: string
   onClick?: () => void
+  classInfo?: string
+  sectionInfo?: string
 }) {
   const colors = {
     Homework: 'from-orange-400 to-pink-500',
@@ -51,8 +55,20 @@ export default function HighlightCard({
       </div>
       <h3 className="text-xl font-bold mb-2">{title}</h3>
       <p className="text-white/90 text-sm line-clamp-3 mb-3">{content}</p>
-      {(teacher || subject) && (
+      {(teacher || subject || classInfo || sectionInfo) && (
         <div className="flex flex-wrap gap-2 mt-2 pt-2 border-t border-white/20">
+          {classInfo && (
+            <div className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
+              <Building size={12} />
+              {classInfo}
+            </div>
+          )}
+          {sectionInfo && (
+            <div className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
+              <Users size={12} />
+              {sectionInfo}
+            </div>
+          )}
           {teacher && (
             <div className="flex items-center gap-1 text-xs font-medium bg-white/20 px-2 py-1 rounded-full">
               <User size={12} />

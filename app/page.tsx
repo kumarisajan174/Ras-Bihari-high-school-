@@ -271,6 +271,8 @@ export default function HomePage() {
                     type={item.type}
                     teacher={item.teacher?.name}
                     subject={item.subject?.name}
+                    classInfo={item.class?.name ? `Class ${item.class.name}` : undefined}
+                    sectionInfo={item.section?.name ? `Section ${item.section.name}` : undefined}
                     onClick={() => handleHighlightClick(item)}
                   />
                 </motion.div>
