@@ -47,26 +47,28 @@ export async function POST(request: Request) {
       prisma.subject.findUnique({ where: { id: subjectId } })
     ])
     
-    const teacherExists = teacherId ? await prisma.teacher.findUnique({ where: { id: teacherId } }) : true
-    
-    console.log('Teacher exists:', !!teacherExists)
     console.log('Class exists:', !!classExists)
     console.log('Section exists:', !!sectionExists)
     console.log('Subject exists:', !!subjectExists)
 
+    const postData: any = {
+      title,
+      content,
+      contentPages: contentPages || null,
+      type,
+      date: new Date(date),
+      classId,
+      sectionId,
+      subjectId,
+      isHighlight: isHighlight || false
+    }
+
+    if (teacherId) {
+      postData.teacher = { connect: { id: teacherId } }
+    }
+
     const post = await prisma.post.create({
-      data: {
-        title,
-        content,
-        contentPages: contentPages || null,
-        type,
-        date: new Date(date),
-        teacherId: teacherId || null,
-        classId,
-        sectionId,
-        subjectId,
-        isHighlight: isHighlight || false
-      }
+      data: postData
     })
     
     console.log('Post created successfully:', post.id)
