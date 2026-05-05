@@ -35,20 +35,19 @@ export async function POST(request: Request) {
     
     const { title, content, contentPages, type, date, teacherId, classId, sectionId, subjectId, isHighlight } = body
 
-    // Validate all required fields
     console.log('Validating fields...')
     console.log('teacherId:', teacherId)
     console.log('classId:', classId)
     console.log('sectionId:', sectionId)
     console.log('subjectId:', subjectId)
     
-    // Check if relations exist
-    const [teacherExists, classExists, sectionExists, subjectExists] = await Promise.all([
-      prisma.teacher.findUnique({ where: { id: teacherId } }),
+    const [classExists, sectionExists, subjectExists] = await Promise.all([
       prisma.class.findUnique({ where: { id: classId } }),
       prisma.section.findUnique({ where: { id: sectionId } }),
       prisma.subject.findUnique({ where: { id: subjectId } })
     ])
+    
+    const teacherExists = teacherId ? await prisma.teacher.findUnique({ where: { id: teacherId } }) : true
     
     console.log('Teacher exists:', !!teacherExists)
     console.log('Class exists:', !!classExists)
@@ -62,7 +61,7 @@ export async function POST(request: Request) {
         contentPages: contentPages || null,
         type,
         date: new Date(date),
-        teacherId,
+        teacherId: teacherId || null,
         classId,
         sectionId,
         subjectId,
