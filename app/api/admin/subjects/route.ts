@@ -1,7 +1,17 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic'
+
+// Helper function to check admin authentication
+function checkAdminAuth() {
+  const token = cookies().get("admin_token");
+  if (!token) {
+    return false;
+  }
+  return true;
+}
 
 export async function GET() {
   try {
@@ -15,6 +25,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!checkAdminAuth()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { name } = await request.json()
     const subject = await prisma.subject.create({
@@ -27,6 +41,10 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!checkAdminAuth()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id } = await request.json()
     await prisma.subject.delete({ where: { id } })

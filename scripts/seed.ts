@@ -2,14 +2,14 @@ import prisma from '../lib/prisma'
 
 async function main() {
   console.log('🌱 Seeding database safely (no data deleted)...')
-
+  
   // -------------------------------
   // 1. CREATE CLASSES ONLY IF NEEDED
   // -------------------------------
   const classNames = ['9', '10', '11', '12']
   const existingClasses = await prisma.class.findMany()
   const existingClassNames = existingClasses.map(c => c.name)
-
+  
   for (const name of classNames) {
     if (!existingClassNames.includes(name)) {
       await prisma.class.create({ data: { name } })
@@ -24,7 +24,7 @@ async function main() {
   const sectionNames = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
   const existingSections = await prisma.section.findMany()
   const existingSectionNames = existingSections.map(s => s.name)
-
+  
   for (const name of sectionNames) {
     if (!existingSectionNames.includes(name)) {
       await prisma.section.create({ data: { name } })
@@ -42,7 +42,7 @@ async function main() {
   ]
   const existingSubjects = await prisma.subject.findMany()
   const existingSubjectNames = existingSubjects.map(s => s.name)
-
+  
   for (const name of allSubjectNames) {
     if (!existingSubjectNames.includes(name)) {
       await prisma.subject.create({ data: { name } })
@@ -55,7 +55,7 @@ async function main() {
   // -------------------------------
   const existingTeachers = await prisma.teacher.findMany()
   const existingTeacherNames = existingTeachers.map(t => t.name)
-
+  
   const sampleTeachers = [
     {
       name: 'Mr. Sunny',
@@ -77,16 +77,9 @@ async function main() {
       password: 'akash123',
       assignedClasses: ['9'],
       assignedSections: ['A']
-    },
-    {
-      name: 'Principal',
-      subject: 'All Subjects',
-      password: 'principal123',
-      assignedClasses: ['9', '10', '11', '12'],
-      assignedSections: ['A', 'B', 'C', 'D', 'E', 'F', 'G']
     }
   ]
-
+  
   for (const teacherData of sampleTeachers) {
     if (!existingTeacherNames.includes(teacherData.name)) {
       await prisma.teacher.create({ data: teacherData })
@@ -109,7 +102,6 @@ async function main() {
   console.log('   - Mr. Sunny (English): sunny123')
   console.log('   - Shivani (Maths): shivani123')
   console.log('   - Akash (Physics): akash123')
-  console.log('   - Principal (All): principal123')
   console.log('\n⚠️  Your manually added teachers, posts, notices are SAFE!')
   console.log('⚠️  The seed script never deletes anything anymore!')
 }

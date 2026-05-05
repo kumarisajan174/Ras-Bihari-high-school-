@@ -129,65 +129,41 @@ export default function AddPostPage() {
       const content = contentPages.map(p => p.content).join('\n\n---PAGE BREAK---\n\n')
       
       const postPromises = []
-      const postDetails = []
       
       for (const classId of formData.classIds) {
         for (const sectionId of formData.sectionIds) {
           for (const subjectId of formData.subjectIds) {
-            const postData = {
-              title: formData.title,
-              content,
-              contentPages: contentPages.filter(p => p.content.trim()),
-              type: formData.type,
-              date: formData.date,
-              teacherId: formData.teacherId || null,
-              classId,
-              sectionId,
-              subjectId,
-              isHighlight: formData.isHighlight
-            }
-            postDetails.push({ classId, sectionId, subjectId })
-            
             const postPromise = fetch('/api/admin/posts', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(postData)
+              body: JSON.stringify({
+                title: formData.title,
+                content,
+                contentPages,
+                type: formData.type,
+                date: formData.date,
+                teacherId: formData.teacherId || null,
+                classId,
+                sectionId,
+                subjectId,
+                isHighlight: formData.isHighlight
+              })
             })
             postPromises.push(postPromise)
           }
         }
       }
 
-      console.log('Creating posts with details:', postDetails)
-      
       const responses = await Promise.all(postPromises)
+      const allSuccess = responses.every(res => res.ok)
       
-      let failedCount = 0
-      let successCount = 0
-      
-      for (let i = 0; i < responses.length; i++) {
-        const res = responses[i]
-        if (res.ok) {
-          successCount++
-        } else {
-          failedCount++
-          const errorData = await res.json().catch(() => ({}))
-          console.error(`Post ${i + 1} failed:`, postDetails[i], errorData)
-        }
-      }
-      
-      console.log(`Success: ${successCount}, Failed: ${failedCount}`)
-      
-      if (failedCount === 0) {
+      if (allSuccess) {
         setSuccess(true)
         setTimeout(() => {
           router.push('/admin/dashboard/posts')
         }, 1500)
-      } else if (successCount > 0) {
-        alert(`Some posts failed (${failedCount}/${responses.length}). ${successCount} posts were created successfully.`)
-        router.push('/admin/dashboard/posts')
       } else {
-        alert('All posts failed to create. Please try again.')
+        alert('Some posts failed to create. Please try again.')
       }
     } catch (error) {
       console.error('Fetch error:', error)

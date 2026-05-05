@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic'
 
@@ -37,6 +38,14 @@ export async function POST(request: Request) {
       console.log('Password mismatch:', teacher.password, 'vs', password)
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
     }
+
+    // Set teacher cookie
+    cookies().set("teacher_token", "logged_in", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
 
     console.log('Login successful!')
     return NextResponse.json({

@@ -1,5 +1,6 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic'
 
@@ -24,6 +25,14 @@ export async function POST(request: Request) {
         { status: 401 }
       )
     }
+
+    // Set admin cookie
+    cookies().set("admin_token", "logged_in", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+    });
 
     return NextResponse.json({
       success: true,

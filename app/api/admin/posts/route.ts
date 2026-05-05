@@ -1,9 +1,20 @@
 import prisma from '@/lib/prisma'
 import { NextResponse } from 'next/server'
+import { cookies } from "next/headers";
 
 export const dynamic = 'force-dynamic'
 
+// Helper function to check admin authentication
+function checkAdminAuth() {
+  const token = cookies().get("admin_token");
+  if (!token) {
+    return false;
+  }
+  return true;
+}
+
 export async function GET(request: Request) {
+  // GET requests can be public for now
   try {
     const { searchParams } = new URL(request.url)
     const classId = searchParams.get('classId')
@@ -28,46 +39,48 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!checkAdminAuth()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     console.log('=== POST CREATE REQUEST ===')
-    console.log('Body:', JSON.stringify(body, null, 2))
+    console.log('Body:', body)
     
     const { title, content, contentPages, type, date, teacherId, classId, sectionId, subjectId, isHighlight } = body
 
-    let finalTeacherId = teacherId
+    // Validate all required fields
+    console.log('Validating fields...')
+    console.log('teacherId:', teacherId)
+    console.log('classId:', classId)
+    console.log('sectionId:', sectionId)
+    console.log('subjectId:', subjectId)
     
-    if (!finalTeacherId || finalTeacherId.trim() === '') {
-      const principal = await prisma.teacher.findFirst({
-        where: { name: 'Principal' }
-      })
-      if (principal) {
-        finalTeacherId = principal.id
-        console.log('Using Principal teacher:', finalTeacherId)
-      }
-    }
-
-    const createData: any = {
-      title,
-      content,
-      contentPages: contentPages || null,
-      type,
-      date: new Date(date),
-      classId,
-      sectionId,
-      subjectId,
-      isHighlight: isHighlight || false
-    }
-
-    if (finalTeacherId) {
-      createData.teacherId = finalTeacherId
-    }
-
-    console.log('=== FINAL CREATE DATA ===')
-    console.log(JSON.stringify(createData, null, 2))
+    // Check if relations exist
+    const [classExists, sectionExists, subjectExists] = await Promise.all([
+      prisma.class.findUnique({ where: { id: classId } }),
+      prisma.section.findUnique({ where: { id: sectionId } }),
+      prisma.subject.findUnique({ where: { id: subjectId } })
+    ])
+    
+    console.log('Class exists:', !!classExists)
+    console.log('Section exists:', !!sectionExists)
+    console.log('Subject exists:', !!subjectExists)
 
     const post = await prisma.post.create({
-      data: createData
+      data: {
+        title,
+        content,
+        contentPages: contentPages || null,
+        type,
+        date: new Date(date),
+        teacherId: teacherId || null,
+        classId,
+        sectionId,
+        subjectId,
+        isHighlight: isHighlight || false
+      }
     })
     
     console.log('Post created successfully:', post.id)
@@ -76,11 +89,16 @@ export async function POST(request: Request) {
     console.error('=== POST CREATE ERROR ===')
     console.error('Error:', error)
     console.error('Error message:', error.message)
+    console.error('Error stack:', error.stack)
     return NextResponse.json({ error: 'Error creating post', details: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
+  if (!checkAdminAuth()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id, ...data } = await request.json()
     const post = await prisma.post.update({
@@ -94,6 +112,10 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!checkAdminAuth()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const { id } = await request.json()
     await prisma.post.delete({ where: { id } })

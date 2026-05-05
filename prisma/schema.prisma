@@ -61,11 +61,11 @@ model Post {
   contentPages Json?
   type        String
   date        DateTime
-  teacherId   String?
+  teacherId   String
   classId     String
   sectionId   String
   subjectId   String
-  teacher     Teacher? @relation(fields: [teacherId], references: [id])
+  teacher     Teacher  @relation(fields: [teacherId], references: [id])
   class       Class    @relation(fields: [classId], references: [id])
   section     Section  @relation(fields: [sectionId], references: [id])
   subject     Subject  @relation(fields: [subjectId], references: [id])
