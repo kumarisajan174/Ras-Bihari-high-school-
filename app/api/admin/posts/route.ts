@@ -51,6 +51,18 @@ export async function POST(request: Request) {
     console.log('Section exists:', !!sectionExists)
     console.log('Subject exists:', !!subjectExists)
 
+    let finalTeacherId = teacherId
+    
+    if (!finalTeacherId || finalTeacherId.trim() === '') {
+      const principal = await prisma.teacher.findFirst({
+        where: { name: 'Principal' }
+      })
+      if (principal) {
+        finalTeacherId = principal.id
+        console.log('Using Principal teacher:', finalTeacherId)
+      }
+    }
+
     const postData: any = {
       title,
       content,
@@ -63,8 +75,8 @@ export async function POST(request: Request) {
       isHighlight: isHighlight || false
     }
 
-    if (teacherId && teacherId.trim() !== '') {
-      postData.teacher = { connect: { id: teacherId } }
+    if (finalTeacherId && finalTeacherId.trim() !== '') {
+      postData.teacher = { connect: { id: finalTeacherId } }
     }
 
     console.log('Post data to create:', postData)
