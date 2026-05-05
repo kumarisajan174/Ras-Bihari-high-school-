@@ -31,25 +31,9 @@ export async function POST(request: Request) {
   try {
     const body = await request.json()
     console.log('=== POST CREATE REQUEST ===')
-    console.log('Body:', body)
+    console.log('Body:', JSON.stringify(body, null, 2))
     
     const { title, content, contentPages, type, date, teacherId, classId, sectionId, subjectId, isHighlight } = body
-
-    console.log('Validating fields...')
-    console.log('teacherId:', teacherId)
-    console.log('classId:', classId)
-    console.log('sectionId:', sectionId)
-    console.log('subjectId:', subjectId)
-    
-    const [classExists, sectionExists, subjectExists] = await Promise.all([
-      prisma.class.findUnique({ where: { id: classId } }),
-      prisma.section.findUnique({ where: { id: sectionId } }),
-      prisma.subject.findUnique({ where: { id: subjectId } })
-    ])
-    
-    console.log('Class exists:', !!classExists)
-    console.log('Section exists:', !!sectionExists)
-    console.log('Subject exists:', !!subjectExists)
 
     let finalTeacherId = teacherId
     
@@ -63,26 +47,27 @@ export async function POST(request: Request) {
       }
     }
 
-    const postData: any = {
+    const createData: any = {
       title,
       content,
       contentPages: contentPages || null,
       type,
       date: new Date(date),
-      class: { connect: { id: classId } },
-      section: { connect: { id: sectionId } },
-      subject: { connect: { id: subjectId } },
+      classId,
+      sectionId,
+      subjectId,
       isHighlight: isHighlight || false
     }
 
-    if (finalTeacherId && finalTeacherId.trim() !== '') {
-      postData.teacher = { connect: { id: finalTeacherId } }
+    if (finalTeacherId) {
+      createData.teacherId = finalTeacherId
     }
 
-    console.log('Post data to create:', postData)
+    console.log('=== FINAL CREATE DATA ===')
+    console.log(JSON.stringify(createData, null, 2))
 
     const post = await prisma.post.create({
-      data: postData
+      data: createData
     })
     
     console.log('Post created successfully:', post.id)
@@ -91,7 +76,6 @@ export async function POST(request: Request) {
     console.error('=== POST CREATE ERROR ===')
     console.error('Error:', error)
     console.error('Error message:', error.message)
-    console.error('Error stack:', error.stack)
     return NextResponse.json({ error: 'Error creating post', details: error.message }, { status: 500 })
   }
 }
