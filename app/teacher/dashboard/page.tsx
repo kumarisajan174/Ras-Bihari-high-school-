@@ -32,7 +32,7 @@ export default function TeacherDashboardPage() {
 
   async function fetchTeacherPosts(teacherId: string) {
     try {
-      const res = await fetch(`/api/teacher/posts?teacherId=${teacherId}`)
+      const res = await fetch(`/api/admin/posts?teacherId=${teacherId}`)
       const data = await res.json()
       setPosts(Array.isArray(data) ? data : [])
     } catch (error) {
@@ -169,7 +169,7 @@ export default function TeacherDashboardPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${
                           post.type === 'Homework'
                             ? 'bg-blue-100 text-blue-700'
@@ -180,6 +180,16 @@ export default function TeacherDashboardPage() {
                         <span className="text-xs text-gray-500">
                           {new Date(post.date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                         </span>
+                        {post.class?.name && (
+                          <span className="text-xs px-2 py-1 rounded-full font-bold bg-purple-100 text-purple-700">
+                            Class {post.class.name}
+                          </span>
+                        )}
+                        {post.section?.name && (
+                          <span className="text-xs px-2 py-1 rounded-full font-bold bg-indigo-100 text-indigo-700">
+                            Section {post.section.name}
+                          </span>
+                        )}
                       </div>
                       <h4 className="font-bold text-gray-800">{post.title}</h4>
                       <p className="text-sm text-gray-600 mt-1 line-clamp-2">{post.content}</p>
