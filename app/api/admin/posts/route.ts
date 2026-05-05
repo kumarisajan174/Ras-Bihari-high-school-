@@ -57,15 +57,17 @@ export async function POST(request: Request) {
       contentPages: contentPages || null,
       type,
       date: new Date(date),
-      classId,
-      sectionId,
-      subjectId,
+      class: { connect: { id: classId } },
+      section: { connect: { id: sectionId } },
+      subject: { connect: { id: subjectId } },
       isHighlight: isHighlight || false
     }
 
-    if (teacherId) {
+    if (teacherId && teacherId.trim() !== '') {
       postData.teacher = { connect: { id: teacherId } }
     }
+
+    console.log('Post data to create:', postData)
 
     const post = await prisma.post.create({
       data: postData
