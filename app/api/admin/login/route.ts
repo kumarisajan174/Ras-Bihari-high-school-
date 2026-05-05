@@ -26,11 +26,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // Set admin cookie
+    // Set admin cookie with lax sameSite for proper cookie detection
     cookies().set("admin_token", "logged_in", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       path: "/",
     });
 

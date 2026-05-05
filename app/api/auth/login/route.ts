@@ -39,11 +39,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Incorrect password' }, { status: 401 })
     }
 
-    // Set teacher cookie
+    // Set teacher cookie with lax sameSite for proper cookie detection
     cookies().set("teacher_token", "logged_in", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax",
       path: "/",
     });
 
